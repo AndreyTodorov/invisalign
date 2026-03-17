@@ -13,7 +13,7 @@ export function scheduleReminderNotification(thresholdMinutes: number): void {
   scheduledTimer = setTimeout(() => {
     new Notification('InvisaTrack Reminder', {
       body: `Your aligners have been out for ${thresholdMinutes} minutes!`,
-      icon: '/invisalign/icon-192.png',
+      icon: '/invisatrack/icon-192.png',
     })
   }, thresholdMinutes * 60 * 1000)
 }
