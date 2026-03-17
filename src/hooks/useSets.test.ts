@@ -7,6 +7,7 @@ vi.mock('../services/firebase', () => ({
   push: vi.fn(() => ({ key: 'new-set-id' })),
   set: vi.fn(),
   update: vi.fn(),
+  remove: vi.fn(),
   ref: vi.fn(() => ({})),
   db: {},
   setsRef: vi.fn(() => ({})),
@@ -17,6 +18,7 @@ vi.mock('../services/db', () => ({
     sets: {
       put: vi.fn(),
       update: vi.fn(),
+      delete: vi.fn(),
     },
     treatment: {
       update: vi.fn(),
@@ -54,7 +56,7 @@ vi.mock('../utils/time', () => ({
   }),
 }))
 
-import { set as fbSet, update as fbUpdate } from '../services/firebase'
+import { set as fbSet, update as fbUpdate, remove as fbRemove } from '../services/firebase'
 import { localDB } from '../services/db'
 import { queueWrite } from '../services/syncManager'
 import { useDataContext } from '../contexts/DataContext'
@@ -79,8 +81,10 @@ beforeEach(() => {
   vi.clearAllMocks()
   vi.mocked(fbSet).mockResolvedValue(undefined as never)
   vi.mocked(fbUpdate).mockResolvedValue(undefined as never)
+  vi.mocked(fbRemove).mockResolvedValue(undefined as never)
   vi.mocked(localDB.sets.put).mockResolvedValue(undefined as never)
   vi.mocked(localDB.sets.update).mockResolvedValue(undefined as never)
+  vi.mocked(localDB.sets.delete).mockResolvedValue(undefined as never)
   vi.mocked(localDB.treatment.update).mockResolvedValue(undefined as never)
   vi.mocked(queueWrite).mockResolvedValue(undefined as never)
   vi.mocked(useDataContext).mockReturnValue({ sets: [], treatment: null } as never)
@@ -218,6 +222,38 @@ describe('updateTreatment', () => {
     expect(fbUpdate).not.toHaveBeenCalled()
     expect(queueWrite).toHaveBeenCalledWith(
       expect.objectContaining({ operation: 'update', path: 'users/user1/treatment' })
+    )
+  })
+})
+
+describe('deleteSet', () => {
+  it('deletes from localDB and Firebase when online', async () => {
+    vi.mocked(useDataContext).mockReturnValue({
+      sets: [makeSet('s1', 3)],
+      treatment: makeTreatment(3),
+    } as never)
+
+    const { result } = renderHook(() => useSets())
+    await act(async () => { await result.current.deleteSet('s1') })
+
+    expect(localDB.sets.delete).toHaveBeenCalledWith('s1')
+    expect(fbRemove).toHaveBeenCalled()
+    expect(queueWrite).not.toHaveBeenCalled()
+  })
+
+  it('queues delete when offline', async () => {
+    vi.mocked(useOnlineStatus).mockReturnValue(false)
+    vi.mocked(useDataContext).mockReturnValue({
+      sets: [makeSet('s1', 3)],
+      treatment: makeTreatment(3),
+    } as never)
+
+    const { result } = renderHook(() => useSets())
+    await act(async () => { await result.current.deleteSet('s1') })
+
+    expect(fbRemove).not.toHaveBeenCalled()
+    expect(queueWrite).toHaveBeenCalledWith(
+      expect.objectContaining({ operation: 'delete', path: 'users/user1/sets/s1' })
     )
   })
 })

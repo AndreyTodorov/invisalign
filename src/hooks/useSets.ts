@@ -1,5 +1,5 @@
 import { useCallback } from 'react'
-import { push, set, update, ref, db, setsRef } from '../services/firebase'
+import { push, set, update, remove, ref, db, setsRef } from '../services/firebase'
 import { localDB } from '../services/db'
 import { queueWrite } from '../services/syncManager'
 import { useDataContext } from '../contexts/DataContext'
@@ -80,5 +80,12 @@ export function useSets() {
     else await queueWrite({ operation: 'update', path, data: updates, timestamp: nowISO(), deviceId })
   }, [uid, online, deviceId])
 
-  return { sets, treatment, startNewSet, updateTreatment, updateSet }
+  const deleteSet = useCallback(async (setId: string) => {
+    const path = `users/${uid}/sets/${setId}`
+    await localDB.sets.delete(setId)
+    if (online) await remove(ref(db, path))
+    else await queueWrite({ operation: 'delete', path, data: null, timestamp: nowISO(), deviceId })
+  }, [uid, online, deviceId])
+
+  return { sets, treatment, startNewSet, updateTreatment, updateSet, deleteSet }
 }
