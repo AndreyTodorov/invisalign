@@ -1,5 +1,5 @@
 import {
-  createContext, useContext, useEffect, useState, type ReactNode,
+  createContext, useContext, useEffect, useState, type ReactNode, type Dispatch, type SetStateAction,
 } from 'react'
 import { onValue, sessionsRef, setsRef, profileRef, treatmentRef } from '../services/firebase'
 import { localDB } from '../services/db'
@@ -11,6 +11,7 @@ interface DataContextValue {
   profile: UserProfile | null
   treatment: Treatment | null
   loaded: boolean
+  setSessions: Dispatch<SetStateAction<Session[]>>
 }
 
 const DataContext = createContext<DataContextValue | null>(null)
@@ -107,7 +108,7 @@ export function DataProvider({ uid, children }: { uid: string; children: ReactNo
   }, [uid])
 
   return (
-    <DataContext.Provider value={{ sessions, sets, profile, treatment, loaded }}>
+    <DataContext.Provider value={{ sessions, sets, profile, treatment, loaded, setSessions }}>
       {children}
     </DataContext.Provider>
   )

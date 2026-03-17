@@ -17,7 +17,7 @@ export function useTimer(
   currentSetNumber: number
 ) {
   const { sessions, startSession, stopSession } = useSessions()
-  const activeSession = sessions.find(s => s.endTime === null) ?? null
+  const activeSession = sessions.find(s => s.endTime == null) ?? null
 
   const [timerState, setTimerState] = useState<TimerState>({
     activeSessionId: null,

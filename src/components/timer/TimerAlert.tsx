@@ -5,16 +5,59 @@ interface Props {
 
 export default function TimerAlert({ thresholdMinutes, onDismiss }: Props) {
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl p-6 max-w-sm w-full text-center shadow-xl">
-        <div className="text-4xl mb-3">⏰</div>
-        <h2 className="text-xl font-bold text-red-600 mb-2">Put Your Aligners Back!</h2>
-        <p className="text-gray-600 mb-4">
-          Your aligners have been out for {thresholdMinutes} minutes.
+    <div style={{
+      position: 'fixed', inset: 0,
+      background: 'rgba(0,0,0,0.75)',
+      backdropFilter: 'blur(8px)',
+      WebkitBackdropFilter: 'blur(8px)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      zIndex: 100, padding: 24,
+    }}>
+      <div
+        className="animate-fade-in"
+        style={{
+          background: 'var(--surface)',
+          border: '1px solid rgba(248,113,113,0.25)',
+          borderRadius: 24,
+          padding: 32,
+          maxWidth: 340,
+          width: '100%',
+          textAlign: 'center',
+          boxShadow: '0 0 60px rgba(248,113,113,0.15)',
+        }}
+      >
+        <div style={{
+          width: 60, height: 60,
+          borderRadius: '50%',
+          background: 'var(--rose-bg)',
+          border: '1px solid rgba(248,113,113,0.3)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          margin: '0 auto 20px',
+          fontSize: 28,
+        }}>
+          ⏰
+        </div>
+        <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--rose)', marginBottom: 8 }}>
+          Put Your Aligners Back
+        </h2>
+        <p style={{ fontSize: 14, color: 'var(--text-muted)', marginBottom: 28, lineHeight: 1.6 }}>
+          Aligners have been out for <strong style={{ color: 'var(--text)' }}>{thresholdMinutes} minutes</strong>.
         </p>
         <button
           onClick={onDismiss}
-          className="bg-indigo-500 text-white rounded-xl px-6 py-3 font-semibold w-full"
+          style={{
+            width: '100%',
+            background: 'var(--rose)',
+            color: '#fff',
+            border: 'none',
+            borderRadius: 14,
+            padding: '14px 0',
+            fontSize: 15,
+            fontWeight: 600,
+            fontFamily: 'inherit',
+            cursor: 'pointer',
+            letterSpacing: '0.02em',
+          }}
         >
           Got it
         </button>

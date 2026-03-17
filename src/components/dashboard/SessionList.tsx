@@ -1,5 +1,5 @@
 import type { Session } from '../../types'
-import { formatDuration, diffMinutes } from '../../utils/time'
+import { formatDurationShort, diffMinutes } from '../../utils/time'
 
 interface Props {
   sessions: Session[]
@@ -16,30 +16,66 @@ function formatLocalTime(isoString: string, offsetMinutes: number): string {
 
 export default function SessionList({ sessions, onEdit }: Props) {
   const completed = sessions
-    .filter(s => s.endTime !== null)
+    .filter(s => s.endTime != null)
     .sort((a, b) => b.startTime.localeCompare(a.startTime))
 
   if (completed.length === 0) return (
-    <p className="text-gray-400 text-center py-4 text-sm">No sessions yet today</p>
+    <p style={{ color: 'var(--text-faint)', textAlign: 'center', padding: '16px 0', fontSize: 14 }}>
+      No sessions yet today
+    </p>
   )
 
   return (
-    <div className="space-y-2">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
       {completed.map(s => {
         const duration = diffMinutes(s.startTime, s.endTime!)
         return (
           <button
             key={s.id}
             onClick={() => onEdit(s)}
-            className="w-full flex items-center justify-between bg-white rounded-xl p-3 shadow-sm text-left hover:bg-gray-50 active:bg-gray-100"
+            style={{
+              width: '100%',
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              background: 'var(--surface)',
+              border: '1px solid var(--border)',
+              borderRadius: 14,
+              padding: '12px 16px',
+              cursor: 'pointer',
+              transition: 'background 0.15s, border-color 0.15s',
+              textAlign: 'left',
+              fontFamily: 'inherit',
+            }}
+            onPointerEnter={e => {
+              e.currentTarget.style.background = 'var(--surface-2)'
+              e.currentTarget.style.borderColor = 'var(--border-strong)'
+            }}
+            onPointerLeave={e => {
+              e.currentTarget.style.background = 'var(--surface)'
+              e.currentTarget.style.borderColor = 'var(--border)'
+            }}
           >
-            <span className="text-sm text-gray-600">
-              {formatLocalTime(s.startTime, s.startTimezoneOffset)} –{' '}
+            <span style={{ fontSize: 14, color: 'var(--text-muted)', fontWeight: 400 }}>
+              {formatLocalTime(s.startTime, s.startTimezoneOffset)}
+              <span style={{ margin: '0 6px', opacity: 0.4 }}>→</span>
               {formatLocalTime(s.endTime!, s.endTimezoneOffset ?? s.startTimezoneOffset)}
             </span>
-            <div className="flex items-center gap-2">
-              {s.autoCapped && <span className="text-xs text-amber-500">auto</span>}
-              <span className="text-sm font-semibold text-gray-700">{formatDuration(duration)}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              {s.autoCapped && (
+                <span style={{
+                  fontSize: 10, color: 'var(--amber)',
+                  background: 'var(--amber-bg)',
+                  border: '1px solid rgba(252,211,77,0.2)',
+                  borderRadius: 6, padding: '2px 6px', fontWeight: 500,
+                }}>
+                  auto
+                </span>
+              )}
+              <span style={{
+                fontSize: 14, fontWeight: 600,
+                color: 'var(--text)',
+              }}>
+                {formatDurationShort(duration)}
+              </span>
             </div>
           </button>
         )

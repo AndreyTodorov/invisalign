@@ -12,7 +12,15 @@ export default function ExportButton() {
   return (
     <button
       onClick={handleExport}
-      className="w-full bg-gray-100 text-gray-700 rounded-xl py-3 font-semibold text-sm"
+      style={{
+        width: '100%',
+        background: 'var(--surface)',
+        color: 'var(--text-muted)',
+        border: '1px solid var(--border)',
+        borderRadius: 12, padding: '13px 0',
+        fontSize: 14, fontWeight: 600,
+        fontFamily: 'inherit', cursor: 'pointer',
+      }}
     >
       Export Sessions as CSV
     </button>

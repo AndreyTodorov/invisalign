@@ -12,7 +12,7 @@ import type { Session } from '../types'
 
 export function useSessions() {
   const { user } = useAuthContext()
-  const { sessions } = useDataContext()
+  const { sessions, setSessions } = useDataContext()
   const online = useOnlineStatus()
   const uid = user!.uid
   const deviceId = getDeviceId()
@@ -95,11 +95,12 @@ export function useSessions() {
   }, [uid, sessions, online, deviceId, writeToFirebase])
 
   const deleteSession = useCallback(async (sessionId: string) => {
+    setSessions(prev => prev.filter(s => s.id !== sessionId))
     await localDB.sessions.delete(sessionId)
     const path = `users/${uid}/sessions/${sessionId}`
     if (online) await remove(ref(db, path))
     else await queueWrite({ operation: 'delete', path, data: null, timestamp: nowISO(), deviceId })
-  }, [uid, online, deviceId])
+  }, [uid, online, deviceId, setSessions])
 
   const addManualSession = useCallback(async (
     startTime: string,

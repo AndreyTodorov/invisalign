@@ -1,39 +1,78 @@
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
-  ReferenceLine, ResponsiveContainer,
+  ReferenceLine, ResponsiveContainer, Cell,
 } from 'recharts'
 import type { DailyStats } from '../../types'
 import { MINUTES_PER_DAY } from '../../constants'
 
 interface Props {
   data: DailyStats[]
-  goalMinutes: number   // FIX LG-2: dynamic, not hardcoded
+  goalMinutes: number
 }
 
 export default function WearChart({ data, goalMinutes }: Props) {
   const chartData = data.map(d => ({
-    date: d.date.slice(5), // MM-DD
+    date: d.date.slice(8, 10) + '.' + d.date.slice(5, 7), // DD.MM
     wear: Math.round(d.wearPercentage),
+    compliant: d.compliant,
   }))
 
-  // FIX LG-2: compute from actual goal setting
   const goalPercent = Math.round((goalMinutes / MINUTES_PER_DAY) * 100)
 
+  const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: { value: number }[]; label?: string }) => {
+    if (!active || !payload?.length) return null
+    return (
+      <div style={{
+        background: 'var(--surface-2)',
+        border: '1px solid var(--border-strong)',
+        borderRadius: 10, padding: '8px 12px',
+        fontSize: 13,
+      }}>
+        <div style={{ color: 'var(--text-muted)', marginBottom: 2 }}>{label}</div>
+        <div style={{ color: 'var(--cyan)', fontWeight: 600 }}>{payload[0].value}% wear</div>
+      </div>
+    )
+  }
+
   return (
-    <ResponsiveContainer width="100%" height={200}>
-      <BarChart data={chartData} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-        <XAxis dataKey="date" tick={{ fontSize: 11 }} />
-        <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} unit="%" />
-        <Tooltip formatter={(v) => [`${v}%`, 'Wear']} />
-        <ReferenceLine
-          y={goalPercent}
-          stroke="#ef4444"
-          strokeDasharray="4 2"
-          label={{ value: 'Goal', fill: '#ef4444', fontSize: 11 }}
-        />
-        <Bar dataKey="wear" fill="#6366f1" radius={[4, 4, 0, 0]} />
-      </BarChart>
-    </ResponsiveContainer>
+    <div style={{
+      background: 'var(--surface)',
+      border: '1px solid var(--border)',
+      borderRadius: 20, padding: '16px 8px 12px',
+    }}>
+      <ResponsiveContainer width="100%" height={190}>
+        <BarChart data={chartData} margin={{ top: 6, right: 8, left: -22, bottom: 0 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
+          <XAxis
+            dataKey="date"
+            tick={{ fontSize: 11, fill: '#6272A0', fontFamily: 'Outfit, sans-serif' }}
+            axisLine={false}
+            tickLine={false}
+          />
+          <YAxis
+            domain={[0, 100]}
+            tick={{ fontSize: 11, fill: '#6272A0', fontFamily: 'Outfit, sans-serif' }}
+            unit="%"
+            axisLine={false}
+            tickLine={false}
+          />
+          <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.03)', radius: 6 }} />
+          <ReferenceLine
+            y={goalPercent}
+            stroke="rgba(248,113,113,0.5)"
+            strokeDasharray="4 3"
+            label={{ value: 'Goal', fill: 'rgba(248,113,113,0.7)', fontSize: 10, fontFamily: 'Outfit' }}
+          />
+          <Bar dataKey="wear" radius={[5, 5, 0, 0]} maxBarSize={40}>
+            {chartData.map((entry, i) => (
+              <Cell
+                key={i}
+                fill={entry.compliant ? 'rgba(34,211,238,0.7)' : 'rgba(248,113,113,0.7)'}
+              />
+            ))}
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
   )
 }

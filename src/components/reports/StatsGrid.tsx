@@ -14,19 +14,36 @@ export default function StatsGrid({ stats }: Props) {
   const complianceDays = stats.filter(d => d.compliant).length
 
   const items = [
-    { label: 'Avg Wear', value: `${avgWear.toFixed(1)}%` },
-    { label: 'Total Removals', value: String(totalRemovals) },
-    { label: 'Avg/Day', value: avgRemovals.toFixed(1) },
-    { label: 'Longest Off', value: formatDuration(longestRemoval) },
-    { label: 'Compliant Days', value: `${complianceDays}/${stats.length}` },
+    { label: 'Avg Wear', value: `${avgWear.toFixed(1)}%`, color: avgWear >= 90 ? 'var(--green)' : avgWear >= 75 ? 'var(--amber)' : 'var(--rose)' },
+    { label: 'Total Removals', value: String(totalRemovals), color: 'var(--text)' },
+    { label: 'Avg / Day', value: String(Math.round(avgRemovals)), color: 'var(--text)' },
+    { label: 'Longest Off', value: formatDuration(longestRemoval), color: 'var(--text-muted)' },
+    { label: 'Compliant', value: `${complianceDays}/${stats.length}`, color: complianceDays === stats.length && stats.length > 0 ? 'var(--green)' : 'var(--text)' },
   ]
 
   return (
-    <div className="grid grid-cols-3 gap-3">
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
       {items.map(item => (
-        <div key={item.label} className="bg-white rounded-xl p-3 shadow-sm text-center">
-          <div className="text-lg font-bold text-gray-800">{item.value}</div>
-          <div className="text-xs text-gray-400 mt-1">{item.label}</div>
+        <div
+          key={item.label}
+          style={{
+            background: 'var(--surface)',
+            border: '1px solid var(--border)',
+            borderRadius: 14, padding: '14px 10px',
+            textAlign: 'center',
+          }}
+        >
+          <div style={{
+            fontSize: 18, fontWeight: 700,
+            color: item.color,
+            fontFamily: "'JetBrains Mono', monospace",
+            lineHeight: 1, marginBottom: 6,
+          }}>
+            {item.value}
+          </div>
+          <div style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 500, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+            {item.label}
+          </div>
         </div>
       ))}
     </div>
