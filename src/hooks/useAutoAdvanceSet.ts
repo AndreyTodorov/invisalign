@@ -16,14 +16,15 @@ export function useAutoAdvanceSet() {
     if (!currentSet?.endDate) return  // legacy set with no endDate, skip
 
     const today = todayLocalDate()
-    if (currentSet.endDate > today) return  // not yet expired
+    const endDateNorm = currentSet.endDate.slice(0, 10)
+    if (endDateNorm > today) return  // not yet expired
 
     hasRunRef.current = true
     const defaultDuration = treatment.defaultSetDurationDays
 
     ;(async () => {
       const created: number[] = []
-      let prevEndDate = currentSet.endDate!
+      let prevEndDate = endDateNorm
       let nextSetNumber = treatment.currentSetNumber + 1
 
       while (prevEndDate <= today) {

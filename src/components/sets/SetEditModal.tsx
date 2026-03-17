@@ -31,7 +31,7 @@ export default function SetEditModal({ set, stats, isCurrent, onClose }: Props) 
   const { updateSet } = useSets()
 
   const currentDays = set.endDate ? dateDiffDays(set.startDate, set.endDate) : null
-  const [startDate, setStartDate] = useState(set.startDate)
+  const [startDate, setStartDate] = useState(set.startDate.slice(0, 10))
   const [durationDays, setDurationDays] = useState(currentDays !== null ? String(currentDays) : '')
   const [note, setNote] = useState(set.note ?? '')
   const [saving, setSaving] = useState(false)
@@ -53,7 +53,8 @@ export default function SetEditModal({ set, stats, isCurrent, onClose }: Props) 
     setError(null)
     try {
       const newEndDate = durationDays !== '' ? addDays(startDate, durationNum) : null
-      const updates: Partial<Pick<AlignerSet, 'endDate' | 'note'>> = {
+      const updates: Partial<Pick<AlignerSet, 'startDate' | 'endDate' | 'note'>> = {
+        startDate,
         endDate: newEndDate,
         note: note.trim() || null,
       }

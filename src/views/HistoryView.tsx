@@ -142,9 +142,10 @@ export default function HistoryView() {
               const stats = getSetStats(s.setNumber)
               const isCurrent = s.setNumber === treatment?.currentSetNumber
               const duration = s.endDate ? dateDiffDays(s.startDate, s.endDate) : null
+              const startStr = s.startDate.slice(0, 10)
               const dateRange = s.endDate
-                ? `${s.startDate} → ${s.endDate}`
-                : `${s.startDate} → ongoing`
+                ? `${startStr} → ${s.endDate.slice(0, 10)}`
+                : `${startStr} → ongoing`
               return (
                 <button
                   key={s.id}

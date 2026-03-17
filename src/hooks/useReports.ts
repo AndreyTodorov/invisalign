@@ -47,8 +47,8 @@ export function useReports(goalMinutes: number) {
       if (!s.endTime) return false
       if (!targetSet) return s.setNumber === setNumber
       const sessionDate = formatDateKey(toLocalDate(s.startTime, s.startTimezoneOffset))
-      if (sessionDate < targetSet.startDate) return false
-      if (targetSet.endDate && sessionDate >= targetSet.endDate) return false
+      if (sessionDate < targetSet.startDate.slice(0, 10)) return false
+      if (targetSet.endDate && sessionDate >= targetSet.endDate.slice(0, 10)) return false
       return true
     })
     const setSegments = getSegmentsForSessions(setSessions)

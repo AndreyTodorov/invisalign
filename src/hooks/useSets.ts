@@ -70,7 +70,7 @@ export function useSets() {
 
   const updateSet = useCallback(async (
     setId: string,
-    updates: Partial<Pick<AlignerSet, 'endDate' | 'note'>>
+    updates: Partial<Pick<AlignerSet, 'startDate' | 'endDate' | 'note'>>
   ) => {
     const path = `users/${uid}/sets/${setId}`
     await localDB.sets.update(setId, updates)
