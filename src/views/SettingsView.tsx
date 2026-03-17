@@ -393,9 +393,21 @@ export default function SettingsPageView() {
         {notifGranted ? (
           <p style={{ fontSize: 13, color: 'var(--green)' }}>Push notifications enabled ✓</p>
         ) : (
-          <button onClick={handleRequestNotifications} style={secondaryBtn}>
-            Enable Push Notifications
-          </button>
+          <>
+            {(() => {
+              const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) ||
+                (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+              return isIOS ? (
+                <p style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.5 }}>
+                  Push notifications are not supported on iPhone or iPad. In-app reminders will still fire while the app is open.
+                </p>
+              ) : (
+                <button onClick={handleRequestNotifications} style={secondaryBtn}>
+                  Enable Push Notifications
+                </button>
+              )
+            })()}
+          </>
         )}
       </div>
 

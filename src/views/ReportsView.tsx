@@ -158,9 +158,14 @@ export default function ReportsView() {
       </div>
 
       {period !== 'set' && stats.length === 0 && (
-        <p style={{ color: 'var(--text-faint)', textAlign: 'center', padding: '40px 0', fontSize: 14 }}>
-          No sessions in this period
-        </p>
+        <div style={{ textAlign: 'center', padding: '40px 0' }}>
+          <p style={{ color: 'var(--text-faint)', fontSize: 14, marginBottom: 6 }}>
+            No sessions recorded{period === '7d' ? ' in the last 7 days' : period === 'week' ? ' this week' : ' this month'}.
+          </p>
+          <p style={{ color: 'var(--text-faint)', fontSize: 12 }}>
+            Start tracking wear time to see your data here.
+          </p>
+        </div>
       )}
 
       {period !== 'set' && stats.length > 0 && (

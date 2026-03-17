@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTimer } from '../hooks/useTimer'
 import { useSessions } from '../hooks/useSessions'
@@ -22,6 +22,8 @@ import {
   MINUTES_PER_DAY,
 } from '../constants'
 
+const SNOOZE_MINUTES = 10
+
 export default function HomeView() {
   const { profile, treatment, loaded } = useDataContext()
   const navigate = useNavigate()
@@ -35,7 +37,8 @@ export default function HomeView() {
     useTimer(reminderMins, autoCapMins, currentSet)
 
   const { sessions } = useSessions()
-  const { streak, allSegments } = useReports(goalMinutes)
+  const { streak, allSegments, getSetStats } = useReports(goalMinutes)
+  const currentSetAvgWear = treatment ? getSetStats(treatment.currentSetNumber).avgWearPct : undefined
 
   // FIX LG-1: Use device local timezone to compute "today" date key
   const todayKey = formatDateKey(toLocalDate(new Date().toISOString(), -new Date().getTimezoneOffset()))
@@ -50,6 +53,7 @@ export default function HomeView() {
 
   const [editingSession, setEditingSession] = useState<Session | null>(null)
   const [showAdd, setShowAdd] = useState(false)
+  const snoozeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [lastSession, setLastSession] = useState<{ durationMinutes: number; budgetLeftMinutes: number } | null>(null)
   const [showAlert, setShowAlert] = useState(false)
   const [alertShownForSessionRef] = useState<{ id: string | null }>({ id: null })
@@ -66,6 +70,19 @@ export default function HomeView() {
       alertShownForSessionRef.id = String(currentSet)
     }
   }, [reminderFired])
+
+  // Clear snooze timer when session stops
+  useEffect(() => {
+    if (!isRunning && snoozeTimerRef.current) {
+      clearTimeout(snoozeTimerRef.current)
+      snoozeTimerRef.current = null
+    }
+  }, [isRunning])
+
+  const handleSnooze = () => {
+    setShowAlert(false)
+    snoozeTimerRef.current = setTimeout(() => setShowAlert(true), SNOOZE_MINUTES * 60 * 1000)
+  }
 
   useEffect(() => {
     if (isRunning) setLastSession(null)
@@ -195,12 +212,15 @@ export default function HomeView() {
       <TreatmentProgress
         treatment={treatment}
         defaultSetDurationDays={treatment?.defaultSetDurationDays ?? 7}
+        avgWearPct={currentSetAvgWear}
+        goalMinutes={goalMinutes}
       />
 
       {showAlert && (
         <TimerAlert
           thresholdMinutes={reminderMins}
           onDismiss={() => setShowAlert(false)}
+          onSnooze={handleSnooze}
         />
       )}
 
