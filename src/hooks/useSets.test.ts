@@ -46,6 +46,7 @@ vi.mock('../utils/deviceId', () => ({
 
 vi.mock('../utils/time', () => ({
   nowISO: vi.fn(() => '2026-03-17T10:00:00.000Z'),
+  todayLocalDate: vi.fn(() => '2026-03-17'),
   addDays: vi.fn((dateStr: string, days: number) => {
     const d = new Date(dateStr + 'T00:00:00Z')
     d.setUTCDate(d.getUTCDate() + days)
@@ -175,6 +176,19 @@ describe('startNewSet', () => {
 
     expect(localDB.sets.update).not.toHaveBeenCalled()
     expect(localDB.sets.put).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe('updateSet', () => {
+  it('updates setNumber in localDB and Firebase when online', async () => {
+    const { result } = renderHook(() => useSets())
+    await act(async () => {
+      await result.current.updateSet('s1', { setNumber: 7 })
+    })
+
+    expect(localDB.sets.update).toHaveBeenCalledWith('s1', { setNumber: 7 })
+    expect(fbUpdate).toHaveBeenCalled()
+    expect(queueWrite).not.toHaveBeenCalled()
   })
 })
 
