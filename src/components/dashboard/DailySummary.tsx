@@ -7,11 +7,12 @@ interface Props {
   removals: number
   goalMinutes: number
   streak: number
+  activeMinutes?: number
 }
 
-export default function DailySummary({ totalOffMinutes, removals, goalMinutes, streak }: Props) {
+export default function DailySummary({ totalOffMinutes, removals, goalMinutes, streak, activeMinutes = 0 }: Props) {
   const maxOffMinutes = MINUTES_PER_DAY - goalMinutes
-  const budgetRemainingMinutes = Math.max(0, maxOffMinutes - totalOffMinutes)
+  const budgetRemainingMinutes = Math.max(0, maxOffMinutes - totalOffMinutes - activeMinutes)
 
   return (
     <div className="bg-white rounded-2xl p-4 shadow-sm">
@@ -21,7 +22,7 @@ export default function DailySummary({ totalOffMinutes, removals, goalMinutes, s
       </div>
       <div className="grid grid-cols-3 gap-3 text-center">
         <div>
-          <div className="text-2xl font-bold text-gray-800">{formatDuration(totalOffMinutes)}</div>
+          <div className="text-2xl font-bold text-gray-800">{formatDuration(totalOffMinutes + activeMinutes)}</div>
           <div className="text-xs text-gray-400 mt-1">Off Time</div>
         </div>
         <div>

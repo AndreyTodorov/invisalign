@@ -97,6 +97,7 @@ export default function HomeView() {
         removals={todayStats.removals}
         goalMinutes={goalMinutes}
         streak={streak}
+        activeMinutes={isRunning ? elapsedMinutes : 0}
       />
 
       <div>

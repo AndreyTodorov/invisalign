@@ -16,7 +16,7 @@ function formatLocalTime(isoString: string, offsetMinutes: number): string {
 
 export default function SessionList({ sessions, onEdit }: Props) {
   const completed = sessions
-    .filter(s => s.endTime !== null)
+    .filter(s => s.endTime != null)
     .sort((a, b) => b.startTime.localeCompare(a.startTime))
 
   if (completed.length === 0) return (
