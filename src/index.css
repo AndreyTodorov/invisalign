@@ -43,6 +43,7 @@ body {
 
 input[type="number"],
 input[type="datetime-local"],
+input[type="date"],
 input[type="text"] {
   background: var(--surface-3);
   color: var(--text);
@@ -57,7 +58,8 @@ input[type="text"] {
 }
 
 input[type="number"]:focus,
-input[type="datetime-local"]:focus {
+input[type="datetime-local"]:focus,
+input[type="date"]:focus {
   border-color: var(--cyan);
 }
 

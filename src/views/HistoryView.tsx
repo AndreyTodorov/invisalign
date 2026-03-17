@@ -6,7 +6,8 @@ import SessionList from '../components/dashboard/SessionList'
 import SessionEditModal from '../components/sessions/SessionEditModal'
 import AddSessionModal from '../components/sessions/AddSessionModal'
 import SetEditModal from '../components/sets/SetEditModal'
-import { toLocalDate, formatDateKey, formatDurationShort, diffMinutes, dateDiffDays } from '../utils/time'
+import StartNewSetModal from '../components/sets/StartNewSetModal'
+import { toLocalDate, formatDateKey, formatDurationShort, diffMinutes, dateDiffDays, todayLocalDate } from '../utils/time'
 import { DEFAULT_DAILY_WEAR_GOAL_MINUTES } from '../constants'
 import type { Session, AlignerSet } from '../types'
 
@@ -21,6 +22,7 @@ export default function HistoryView() {
   const [editingSession, setEditingSession] = useState<Session | null>(null)
   const [editingSet, setEditingSet] = useState<AlignerSet | null>(null)
   const [showAdd, setShowAdd] = useState(false)
+  const [showStartNewSet, setShowStartNewSet] = useState(false)
 
   // FIX LG-1: group by LOCAL date using each session's stored timezone offset
   const byDate = sessions
@@ -48,12 +50,23 @@ export default function HistoryView() {
             onClick={() => setShowAdd(true)}
             style={{
               fontSize: 13, fontWeight: 600, color: 'var(--cyan)',
-              background: 'var(--cyan-bg)', border: '1px solid rgba(34,211,238,0.2)',
-              borderRadius: 20, padding: '5px 14px',
-              fontFamily: 'inherit', cursor: 'pointer',
+              background: 'rgba(34,211,238,0.08)', border: '1px solid rgba(34,211,238,0.2)',
+              borderRadius: 20, padding: '5px 14px', fontFamily: 'inherit', cursor: 'pointer',
             }}
           >
             + Add
+          </button>
+        )}
+        {tab === 'sets' && treatment && (
+          <button
+            onClick={() => setShowStartNewSet(true)}
+            style={{
+              fontSize: 13, fontWeight: 600, color: 'var(--green)',
+              background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.2)',
+              borderRadius: 20, padding: '5px 14px', fontFamily: 'inherit', cursor: 'pointer',
+            }}
+          >
+            + New Set
           </button>
         )}
       </div>
@@ -141,6 +154,7 @@ export default function HistoryView() {
             {sortedSets.map(s => {
               const stats = getSetStats(s.setNumber)
               const isCurrent = s.setNumber === treatment?.currentSetNumber
+                && s.startDate.slice(0, 10) <= todayLocalDate()
               const duration = s.endDate ? dateDiffDays(s.startDate, s.endDate) : null
               const startStr = s.startDate.slice(0, 10)
               const dateRange = s.endDate
@@ -218,11 +232,25 @@ export default function HistoryView() {
         <SetEditModal
           set={editingSet}
           stats={getSetStats(editingSet.setNumber)}
-          isCurrent={editingSet.setNumber === treatment?.currentSetNumber}
+          isCurrent={editingSet.setNumber === treatment?.currentSetNumber
+            && editingSet.startDate.slice(0, 10) <= todayLocalDate()}
+          prevSet={sets
+            .filter(s => s.id !== editingSet.id && s.startDate.slice(0, 10) < editingSet.startDate.slice(0, 10))
+            .sort((a, b) => b.startDate.localeCompare(a.startDate))[0] ?? null}
+          nextSet={sets
+            .filter(s => s.id !== editingSet.id && s.startDate.slice(0, 10) > editingSet.startDate.slice(0, 10))
+            .sort((a, b) => a.startDate.localeCompare(b.startDate))[0] ?? null}
           onClose={() => setEditingSet(null)}
         />
       )}
       {showAdd && <AddSessionModal onClose={() => setShowAdd(false)} />}
+      {showStartNewSet && treatment && (
+        <StartNewSetModal
+          currentSetNumber={treatment.currentSetNumber}
+          defaultDurationDays={treatment.defaultSetDurationDays}
+          onClose={() => setShowStartNewSet(false)}
+        />
+      )}
     </div>
   )
 }
