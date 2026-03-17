@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useTimer } from '../hooks/useTimer'
 import { useSessions } from '../hooks/useSessions'
 import { useReports } from '../hooks/useReports'
+import { useAutoAdvanceSet } from '../hooks/useAutoAdvanceSet'
 import { useDataContext } from '../contexts/DataContext'
 import ActiveTimer from '../components/timer/ActiveTimer'
 import TimerButton from '../components/timer/TimerButton'
@@ -13,7 +14,7 @@ import TreatmentProgress from '../components/dashboard/TreatmentProgress'
 import SessionEditModal from '../components/sessions/SessionEditModal'
 import AddSessionModal from '../components/sessions/AddSessionModal'
 import { computeDailyStats } from '../utils/stats'
-import { toLocalDate, formatDateKey, formatDurationShort } from '../utils/time'
+import { toLocalDate, formatDateKey, formatDurationShort, dateDiffDays } from '../utils/time'
 import type { Session } from '../types'
 import {
   DEFAULT_DAILY_WEAR_GOAL_MINUTES,
@@ -25,7 +26,7 @@ import {
 const SNOOZE_MINUTES = 10
 
 export default function HomeView() {
-  const { profile, treatment, loaded } = useDataContext()
+  const { profile, treatment, sets, loaded } = useDataContext()
   const navigate = useNavigate()
 
   const goalMinutes = profile?.dailyWearGoalMinutes ?? DEFAULT_DAILY_WEAR_GOAL_MINUTES
@@ -38,7 +39,12 @@ export default function HomeView() {
 
   const { sessions } = useSessions()
   const { streak, allSegments, getSetStats } = useReports(goalMinutes)
+  const { autoAdvancedSets, dismiss: dismissAutoAdvance } = useAutoAdvanceSet()
   const currentSetAvgWear = treatment ? getSetStats(treatment.currentSetNumber).avgWearPct : undefined
+  const currentSetData = sets.find(s => s.setNumber === currentSet)
+  const effectiveSetDuration = currentSetData?.endDate
+    ? dateDiffDays(currentSetData.startDate, currentSetData.endDate)
+    : treatment?.defaultSetDurationDays ?? 7
 
   // FIX LG-1: Use device local timezone to compute "today" date key
   const todayKey = formatDateKey(toLocalDate(new Date().toISOString(), -new Date().getTimezoneOffset()))
@@ -121,6 +127,25 @@ export default function HomeView() {
           </span>
         )}
       </div>
+
+      {autoAdvancedSets.length > 0 && (
+        <div style={{
+          background: 'var(--surface)',
+          border: '1px solid rgba(34,211,238,0.2)',
+          borderRadius: 14, padding: '12px 16px',
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+        }}>
+          <span style={{ fontSize: 13, color: 'var(--cyan)' }}>
+            {autoAdvancedSets.length === 1
+              ? `Set ${autoAdvancedSets[0]} started automatically`
+              : `Sets ${autoAdvancedSets[0]}–${autoAdvancedSets[autoAdvancedSets.length - 1]} started automatically`}
+          </span>
+          <button
+            onClick={dismissAutoAdvance}
+            style={{ background: 'none', border: 'none', color: 'var(--text-faint)', fontSize: 18, cursor: 'pointer', padding: '0 4px', fontFamily: 'inherit' }}
+          >×</button>
+        </div>
+      )}
 
       {isRunning && (
         <ActiveTimer elapsedMinutes={elapsedMinutes} reminderFired={reminderFired} />
@@ -211,7 +236,7 @@ export default function HomeView() {
 
       <TreatmentProgress
         treatment={treatment}
-        defaultSetDurationDays={treatment?.defaultSetDurationDays ?? 7}
+        defaultSetDurationDays={effectiveSetDuration}
         avgWearPct={currentSetAvgWear}
         goalMinutes={goalMinutes}
       />

@@ -7,6 +7,7 @@ import ExportButton from '../components/settings/ExportButton'
 import { requestNotificationPermission } from '../services/notifications'
 import { update, ref, db } from '../services/firebase'
 import { localDB } from '../services/db'
+import { addDays, dateDiffDays, todayLocalDate } from '../utils/time'
 import {
   DEFAULT_DAILY_WEAR_GOAL_MINUTES,
   DEFAULT_REMINDER_THRESHOLD_MINUTES,
@@ -102,8 +103,8 @@ function FieldError({ message }: { message?: string }) {
 
 export default function SettingsPageView() {
   const { user, signOut } = useAuthContext()
-  const { profile, treatment } = useDataContext()
-  const { updateTreatment, startNewSet } = useSets()
+  const { profile, treatment, sets } = useDataContext()
+  const { updateTreatment, startNewSet, updateSet } = useSets()
   const { status, queueCount } = useSync()
 
   // Goal split into hours + minutes
@@ -127,7 +128,13 @@ export default function SettingsPageView() {
   const touch = (field: keyof typeof touched) =>
     setTouched(prev => ({ ...prev, [field]: true }))
 
+  // Current set duration override
+  const [setDurationOverride, setSetDurationOverride] = useState<string>('')
+  const setDurationOverrideInitRef = useRef<string>('')
+  const [setDurationSaveState, setSetDurationSaveState] = useState<SaveState>('idle')
+
   const [newSetNumber, setNewSetNumber] = useState<string>('')
+  const [newSetDuration, setNewSetDuration] = useState<string>('')
   const [confirmNewSet, setConfirmNewSet] = useState<number | null>(null)
   const [newSetError, setNewSetError] = useState<string | null>(null)
   const [notifGranted, setNotifGranted] = useState(
@@ -150,8 +157,20 @@ export default function SettingsPageView() {
       setTotalSets(ts)
       setDefaultDuration(dd)
       treatmentInitRef.current = { totalSets: ts, defaultDuration: dd }
+
+      // Auto-fill next set number and default duration
+      setNewSetNumber(String(treatment.currentSetNumber + 1))
+      setNewSetDuration(String(treatment.defaultSetDurationDays))
+
+      // Pre-fill current set's duration (derived from endDate - startDate)
+      const currentSet = sets.find(s => s.setNumber === treatment.currentSetNumber)
+      const overrideStr = currentSet?.endDate
+        ? String(dateDiffDays(currentSet.startDate, currentSet.endDate))
+        : ''
+      setSetDurationOverride(overrideStr)
+      setDurationOverrideInitRef.current = overrideStr
     }
-  }, [profile, treatment])
+  }, [profile, treatment, sets])
 
   // Dirty detection
   const init = profileInitRef.current
@@ -231,10 +250,32 @@ export default function SettingsPageView() {
     }
   }
 
+  const saveSetDurationOverride = async () => {
+    if (!treatment) return
+    const currentSet = sets.find(s => s.setNumber === treatment.currentSetNumber)
+    if (!currentSet || setDurationOverride === '') return
+    setSetDurationSaveState('saving')
+    try {
+      const newEndDate = addDays(currentSet.startDate, parseInt(setDurationOverride))
+      await updateSet(currentSet.id, { endDate: newEndDate })
+      setDurationOverrideInitRef.current = setDurationOverride
+      setSetDurationSaveState('saved')
+      setTimeout(() => setSetDurationSaveState('idle'), 2000)
+    } catch {
+      setSetDurationSaveState('error')
+      setTimeout(() => setSetDurationSaveState('idle'), 3000)
+    }
+  }
+
   const handleStartNewSet = () => {
     const num = parseInt(newSetNumber)
     if (isNaN(num) || num < 1) {
       setNewSetError('Enter a valid set number')
+      return
+    }
+    const dur = parseInt(newSetDuration)
+    if (isNaN(dur) || dur < 1 || dur > 90) {
+      setNewSetError('Duration must be between 1 and 90 days')
       return
     }
     setNewSetError(null)
@@ -244,8 +285,10 @@ export default function SettingsPageView() {
   const confirmStartNewSet = async () => {
     if (confirmNewSet === null) return
     try {
-      await startNewSet(confirmNewSet)
-      setNewSetNumber('')
+      const dur = parseInt(newSetDuration)
+      await startNewSet(confirmNewSet, todayLocalDate(), dur)
+      setNewSetNumber(String(confirmNewSet + 1))
+      setNewSetDuration(String(treatment?.defaultSetDurationDays ?? 7))
       setConfirmNewSet(null)
     } catch (e: unknown) {
       setNewSetError((e as Error).message)
@@ -350,6 +393,48 @@ export default function SettingsPageView() {
         />
       </div>
 
+      {/* Current set duration override */}
+      {treatment && (() => {
+        const currentSet = sets.find(s => s.setNumber === treatment.currentSetNumber)
+        const defaultDur = treatment.defaultSetDurationDays
+        const currentDur = currentSet?.endDate ? dateDiffDays(currentSet.startDate, currentSet.endDate) : defaultDur
+        const overrideDirty = setDurationOverride !== setDurationOverrideInitRef.current
+        const overrideError = setDurationOverride !== '' && (
+          parseInt(setDurationOverride) < 1 ? 'Minimum 1 day' :
+          parseInt(setDurationOverride) > 90 ? 'Maximum 90 days' :
+          undefined
+        )
+        return (
+          <div style={sectionStyle}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+              <span style={sectionTitleStyle}>Current Set</span>
+              <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Set {treatment.currentSetNumber}</span>
+            </div>
+            <div>
+              <label style={labelStyle}>Duration (days)</label>
+              <input
+                type="number" min="1" max="90"
+                value={setDurationOverride}
+                placeholder={`${currentDur} days`}
+                onChange={e => setSetDurationOverride(e.target.value)}
+              />
+              <p style={{ fontSize: 11, color: 'var(--text-faint)', margin: '5px 0 0' }}>
+                {currentSet?.endDate
+                  ? `Ends ${currentSet.endDate} · ${currentDur} days`
+                  : `No end date set — enter days to set a duration.`}
+              </p>
+              {overrideError && <FieldError message={overrideError as string} />}
+            </div>
+            <SaveButton
+              state={overrideError ? 'idle' : setDurationSaveState}
+              dirty={overrideDirty}
+              idleLabel="Save Duration"
+              onClick={saveSetDurationOverride}
+            />
+          </div>
+        )
+      })()}
+
       {/* Switch set */}
       <div style={sectionStyle}>
         <span style={sectionTitleStyle}>Switch Aligner Set</span>
@@ -358,15 +443,26 @@ export default function SettingsPageView() {
           <input type="number" min="1" value={newSetNumber}
             onChange={e => { setNewSetNumber(e.target.value); setNewSetError(null) }}
             placeholder={`e.g. ${(treatment?.currentSetNumber ?? 0) + 1}`} />
-          <FieldError message={newSetError ?? undefined} />
         </div>
+        <div>
+          <label style={labelStyle}>Duration (days)</label>
+          <input type="number" min="1" max="90" value={newSetDuration}
+            onChange={e => { setNewSetDuration(e.target.value); setNewSetError(null) }}
+          />
+          {newSetDuration !== '' && parseInt(newSetDuration) !== (treatment?.defaultSetDurationDays ?? 7) && (
+            <p style={{ fontSize: 11, color: 'var(--amber)', margin: '4px 0 0' }}>
+              Override: {newSetDuration} days (default is {treatment?.defaultSetDurationDays ?? 7})
+            </p>
+          )}
+        </div>
+        <FieldError message={newSetError ?? undefined} />
         {confirmNewSet !== null ? (
           <div style={{
             background: 'var(--amber-bg)', border: '1px solid rgba(252,211,77,0.2)',
             borderRadius: 12, padding: '14px', display: 'flex', flexDirection: 'column', gap: 12,
           }}>
             <p style={{ fontSize: 13, color: 'var(--amber)', fontWeight: 500, textAlign: 'center' }}>
-              Start Set {confirmNewSet}? This will close Set {treatment?.currentSetNumber}.
+              Start Set {confirmNewSet} ({newSetDuration} days)? This will close Set {treatment?.currentSetNumber}.
             </p>
             <div style={{ display: 'flex', gap: 10 }}>
               <button onClick={() => setConfirmNewSet(null)}

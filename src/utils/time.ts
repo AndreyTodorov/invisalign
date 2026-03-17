@@ -78,3 +78,25 @@ export function nowISO(): string {
 export function addMinutes(isoString: string, minutes: number): string {
   return new Date(new Date(isoString).getTime() + minutes * 60_000).toISOString()
 }
+
+/** Add calendar days to a YYYY-MM-DD string, returns YYYY-MM-DD */
+export function addDays(dateStr: string, days: number): string {
+  const d = new Date(dateStr + 'T00:00:00Z')
+  d.setUTCDate(d.getUTCDate() + days)
+  return d.toISOString().slice(0, 10)
+}
+
+/** Difference in calendar days between two YYYY-MM-DD strings */
+export function dateDiffDays(startStr: string, endStr: string): number {
+  const msPerDay = 24 * 60 * 60 * 1000
+  return Math.round(
+    (new Date(endStr + 'T00:00:00Z').getTime() - new Date(startStr + 'T00:00:00Z').getTime()) / msPerDay
+  )
+}
+
+/** Returns today as YYYY-MM-DD in device local timezone */
+export function todayLocalDate(): string {
+  const now = new Date()
+  const offsetMs = -now.getTimezoneOffset() * 60_000
+  return new Date(now.getTime() + offsetMs).toISOString().slice(0, 10)
+}
