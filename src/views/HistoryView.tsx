@@ -24,34 +24,49 @@ export default function HistoryView() {
 
   const sortedDates = Object.keys(byDate).sort().reverse()
 
-  if (!loaded) return <div className="p-8 text-center text-gray-400">Loading…</div>
+  if (!loaded) return (
+    <div style={{ padding: 32, textAlign: 'center', color: 'var(--text-faint)' }}>Loading…</div>
+  )
 
   return (
-    <div className="p-4 space-y-4 max-w-md mx-auto">
-      <div className="flex justify-between items-center pt-2">
-        <h1 className="text-xl font-bold text-gray-800">History</h1>
+    <div style={{ padding: '0 16px 16px', maxWidth: 440, margin: '0 auto' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 20, marginBottom: 20 }}>
+        <h1 style={{ fontSize: 20, fontWeight: 700, color: 'var(--text)', letterSpacing: '-0.01em' }}>History</h1>
         <button
           onClick={() => setShowAdd(true)}
-          className="text-sm text-indigo-500 font-semibold"
+          style={{
+            fontSize: 13, fontWeight: 600, color: 'var(--cyan)',
+            background: 'var(--cyan-bg)', border: '1px solid rgba(34,211,238,0.2)',
+            borderRadius: 20, padding: '5px 14px',
+            fontFamily: 'inherit', cursor: 'pointer',
+          }}
         >
           + Add
         </button>
       </div>
 
       {sortedDates.length === 0 && (
-        <p className="text-gray-400 text-center py-8 text-sm">No sessions yet</p>
+        <p style={{ color: 'var(--text-faint)', textAlign: 'center', padding: '40px 0', fontSize: 14 }}>
+          No sessions yet
+        </p>
       )}
 
-      {sortedDates.map(date => (
-        <div key={date}>
-          <div className="text-sm font-semibold text-gray-500 mb-2">
-            {new Date(date + 'T12:00:00').toLocaleDateString('en-US', {
-              weekday: 'short', month: 'short', day: 'numeric',
-            })}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+        {sortedDates.map(date => (
+          <div key={date}>
+            <div style={{
+              fontSize: 11, fontWeight: 600, color: 'var(--text-muted)',
+              letterSpacing: '0.08em', textTransform: 'uppercase',
+              marginBottom: 8,
+            }}>
+              {new Date(date + 'T12:00:00').toLocaleDateString('en-US', {
+                weekday: 'short', month: 'short', day: 'numeric',
+              })}
+            </div>
+            <SessionList sessions={byDate[date]} onEdit={setEditingSession} />
           </div>
-          <SessionList sessions={byDate[date]} onEdit={setEditingSession} />
-        </div>
-      ))}
+        ))}
+      </div>
 
       {editingSession && (
         <SessionEditModal session={editingSession} onClose={() => setEditingSession(null)} />

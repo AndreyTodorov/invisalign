@@ -13,15 +13,44 @@ import {
   DEFAULT_AUTO_CAP_MINUTES,
 } from '../constants'
 
+const sectionStyle: React.CSSProperties = {
+  background: 'var(--surface)',
+  border: '1px solid var(--border)',
+  borderRadius: 18, padding: '18px 18px',
+  display: 'flex', flexDirection: 'column', gap: 16,
+}
+
+const labelStyle: React.CSSProperties = {
+  display: 'block', fontSize: 11, fontWeight: 500,
+  color: 'var(--text-muted)', letterSpacing: '0.06em',
+  textTransform: 'uppercase', marginBottom: 6,
+}
+
+const sectionTitleStyle: React.CSSProperties = {
+  fontSize: 13, fontWeight: 600, color: 'var(--text-muted)',
+  letterSpacing: '0.06em', textTransform: 'uppercase',
+}
+
+const primaryBtn: React.CSSProperties = {
+  width: '100%', background: 'var(--cyan)', color: '#06090f',
+  border: 'none', borderRadius: 12, padding: '13px 0',
+  fontSize: 14, fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer',
+  letterSpacing: '0.02em',
+}
+
+const secondaryBtn: React.CSSProperties = {
+  width: '100%', background: 'var(--surface-3)', color: 'var(--text)',
+  border: '1px solid var(--border-strong)', borderRadius: 12, padding: '13px 0',
+  fontSize: 14, fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer',
+}
+
 export default function SettingsPageView() {
   const { user, signOut } = useAuthContext()
   const { profile, treatment } = useDataContext()
   const { updateTreatment, startNewSet } = useSets()
   const { status, queueCount } = useSync()
 
-  const [goalHours, setGoalHours] = useState(
-    (DEFAULT_DAILY_WEAR_GOAL_MINUTES / 60)
-  )
+  const [goalHours, setGoalHours] = useState(DEFAULT_DAILY_WEAR_GOAL_MINUTES / 60)
   const [reminderMins, setReminderMins] = useState(DEFAULT_REMINDER_THRESHOLD_MINUTES)
   const [autoCapMins, setAutoCapMins] = useState(DEFAULT_AUTO_CAP_MINUTES)
   const [totalSets, setTotalSets] = useState<string>('')
@@ -98,112 +127,104 @@ export default function SettingsPageView() {
   }
 
   return (
-    <div className="p-4 space-y-6 max-w-md mx-auto pb-8">
-      <h1 className="text-xl font-bold text-gray-800 pt-2">Settings</h1>
-
-      <div className="text-xs text-gray-400">
-        Sync: {status}{queueCount > 0 ? ` (${queueCount} pending)` : ''}
+    <div style={{ padding: '0 16px 32px', maxWidth: 440, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 20 }}>
+        <h1 style={{ fontSize: 20, fontWeight: 700, color: 'var(--text)', letterSpacing: '-0.01em' }}>Settings</h1>
+        <span style={{ fontSize: 11, color: 'var(--text-faint)' }}>
+          {status}{queueCount > 0 ? ` · ${queueCount} pending` : ''}
+        </span>
       </div>
 
       {saveError && (
-        <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-600">
+        <div style={{
+          background: 'var(--rose-bg)', border: '1px solid rgba(248,113,113,0.2)',
+          borderRadius: 12, padding: '12px 14px', fontSize: 13, color: 'var(--rose)',
+        }}>
           {saveError}
         </div>
       )}
 
       {/* Wear goal */}
-      <div className="bg-white rounded-2xl p-4 shadow-sm space-y-3">
-        <h2 className="font-semibold text-gray-700">Wear Goal</h2>
+      <div style={sectionStyle}>
+        <span style={sectionTitleStyle}>Wear Goal</span>
         <div>
-          <label className="block text-sm text-gray-500 mb-1">Daily wear goal (hours)</label>
+          <label style={labelStyle}>Daily wear goal (hours)</label>
           <input type="number" min="1" max="24" step="0.5" value={goalHours}
-            onChange={e => setGoalHours(parseFloat(e.target.value))}
-            className="w-full border rounded-xl p-2" />
+            onChange={e => setGoalHours(parseFloat(e.target.value))} />
         </div>
         <div>
-          <label className="block text-sm text-gray-500 mb-1">Reminder threshold (minutes)</label>
+          <label style={labelStyle}>Reminder threshold (minutes)</label>
           <input type="number" min="5" max="120" value={reminderMins}
-            onChange={e => setReminderMins(parseInt(e.target.value))}
-            className="w-full border rounded-xl p-2" />
+            onChange={e => setReminderMins(parseInt(e.target.value))} />
         </div>
         <div>
-          <label className="block text-sm text-gray-500 mb-1">Auto-cap duration (minutes)</label>
+          <label style={labelStyle}>Auto-cap duration (minutes)</label>
           <input type="number" min="30" max="480" value={autoCapMins}
-            onChange={e => setAutoCapMins(parseInt(e.target.value))}
-            className="w-full border rounded-xl p-2" />
+            onChange={e => setAutoCapMins(parseInt(e.target.value))} />
         </div>
-        <button onClick={saveProfile}
-          className="w-full bg-indigo-500 text-white rounded-xl py-3 font-semibold">
-          Save Preferences
-        </button>
+        <button onClick={saveProfile} style={primaryBtn}>Save Preferences</button>
       </div>
 
       {/* Treatment */}
-      <div className="bg-white rounded-2xl p-4 shadow-sm space-y-3">
-        <h2 className="font-semibold text-gray-700">Treatment Plan</h2>
+      <div style={sectionStyle}>
+        <span style={sectionTitleStyle}>Treatment Plan</span>
         <div>
-          <label className="block text-sm text-gray-500 mb-1">
-            Total aligner sets (leave blank if unknown)
-          </label>
+          <label style={labelStyle}>Total aligner sets (leave blank if unknown)</label>
           <input type="number" min="1" value={totalSets}
-            onChange={e => setTotalSets(e.target.value)}
-            className="w-full border rounded-xl p-2" placeholder="e.g. 30" />
+            onChange={e => setTotalSets(e.target.value)} placeholder="e.g. 30" />
         </div>
         <div>
-          <label className="block text-sm text-gray-500 mb-1">Default set duration (days)</label>
+          <label style={labelStyle}>Default set duration (days)</label>
           <input type="number" min="1" max="30" value={defaultDuration}
-            onChange={e => setDefaultDuration(parseInt(e.target.value))}
-            className="w-full border rounded-xl p-2" />
+            onChange={e => setDefaultDuration(parseInt(e.target.value))} />
         </div>
-        <button onClick={saveTreatment}
-          className="w-full bg-indigo-500 text-white rounded-xl py-3 font-semibold">
-          Save Treatment Settings
-        </button>
+        <button onClick={saveTreatment} style={primaryBtn}>Save Treatment Settings</button>
       </div>
 
       {/* Switch set */}
-      <div className="bg-white rounded-2xl p-4 shadow-sm space-y-3">
-        <h2 className="font-semibold text-gray-700">Switch Aligner Set</h2>
+      <div style={sectionStyle}>
+        <span style={sectionTitleStyle}>Switch Aligner Set</span>
         <div>
-          <label className="block text-sm text-gray-500 mb-1">New set number</label>
+          <label style={labelStyle}>New set number</label>
           <input type="number" min="1" value={newSetNumber}
             onChange={e => setNewSetNumber(e.target.value)}
-            className="w-full border rounded-xl p-2"
             placeholder={`e.g. ${(treatment?.currentSetNumber ?? 0) + 1}`} />
         </div>
         {/* FIX SF-2: in-UI confirmation, no window.confirm() */}
         {confirmNewSet !== null ? (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-3 space-y-2">
-            <p className="text-sm text-yellow-800 font-medium">
+          <div style={{
+            background: 'var(--amber-bg)', border: '1px solid rgba(252,211,77,0.2)',
+            borderRadius: 12, padding: '14px', display: 'flex', flexDirection: 'column', gap: 12,
+          }}>
+            <p style={{ fontSize: 13, color: 'var(--amber)', fontWeight: 500, textAlign: 'center' }}>
               Start Set {confirmNewSet}? This will close Set {treatment?.currentSetNumber}.
             </p>
-            <div className="flex gap-2">
+            <div style={{ display: 'flex', gap: 10 }}>
               <button onClick={() => setConfirmNewSet(null)}
-                className="flex-1 bg-gray-100 text-gray-600 rounded-lg py-2 text-sm font-semibold">
+                style={{ flex: 1, ...secondaryBtn, width: 'auto' }}>
                 Cancel
               </button>
               <button onClick={confirmStartNewSet}
-                className="flex-1 bg-green-500 text-white rounded-lg py-2 text-sm font-semibold">
+                style={{ flex: 1, background: 'var(--green)', color: '#06090f', border: 'none', borderRadius: 12, padding: '12px 0', fontSize: 14, fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer' }}>
                 Confirm
               </button>
             </div>
           </div>
         ) : (
           <button onClick={handleStartNewSet}
-            className="w-full bg-green-500 text-white rounded-xl py-3 font-semibold">
+            style={{ ...secondaryBtn, color: 'var(--green)', borderColor: 'rgba(74,222,128,0.25)' }}>
             Start New Set
           </button>
         )}
       </div>
 
       {/* Notifications */}
-      <div className="bg-white rounded-2xl p-4 shadow-sm space-y-3">
-        <h2 className="font-semibold text-gray-700">Notifications</h2>
+      <div style={sectionStyle}>
+        <span style={sectionTitleStyle}>Notifications</span>
         {notifGranted ? (
-          <p className="text-sm text-green-600">Push notifications enabled</p>
+          <p style={{ fontSize: 13, color: 'var(--green)' }}>Push notifications enabled ✓</p>
         ) : (
-          <button onClick={handleRequestNotifications}
-            className="w-full bg-gray-100 text-gray-700 rounded-xl py-3 font-semibold text-sm">
+          <button onClick={handleRequestNotifications} style={secondaryBtn}>
             Enable Push Notifications
           </button>
         )}
@@ -211,8 +232,15 @@ export default function SettingsPageView() {
 
       <ExportButton />
 
-      <button onClick={signOut}
-        className="w-full bg-red-100 text-red-600 rounded-xl py-3 font-semibold">
+      <button
+        onClick={signOut}
+        style={{
+          width: '100%', background: 'transparent',
+          color: 'var(--rose)', border: '1px solid rgba(248,113,113,0.2)',
+          borderRadius: 12, padding: '13px 0', fontSize: 14, fontWeight: 600,
+          fontFamily: 'inherit', cursor: 'pointer',
+        }}
+      >
         Sign Out
       </button>
     </div>

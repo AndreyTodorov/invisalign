@@ -18,6 +18,7 @@ import {
   DEFAULT_DAILY_WEAR_GOAL_MINUTES,
   DEFAULT_REMINDER_THRESHOLD_MINUTES,
   DEFAULT_AUTO_CAP_MINUTES,
+  MINUTES_PER_DAY,
 } from '../constants'
 
 export default function HomeView() {
@@ -63,15 +64,27 @@ export default function HomeView() {
     }
   }, [reminderFired])
 
+  const maxOffMinutes = MINUTES_PER_DAY - goalMinutes
+  const usedOffMinutes = todayStats.totalOffMinutes + (isRunning ? elapsedMinutes : 0)
+  const budgetPercent = Math.min(100, (usedOffMinutes / maxOffMinutes) * 100)
+
   // Suppress stats rendering until data is loaded
-  if (!loaded) return <div className="p-8 text-center text-gray-400">Loading…</div>
+  if (!loaded) return (
+    <div style={{ padding: 32, textAlign: 'center', color: 'var(--text-faint)' }}>Loading…</div>
+  )
 
   return (
-    <div className="p-4 space-y-4 max-w-md mx-auto">
-      <div className="flex justify-between items-center pt-2">
-        <h1 className="text-xl font-bold text-gray-800">AlignerTrack</h1>
+    <div style={{ padding: '0 16px 16px', maxWidth: 440, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 20 }}>
+        <h1 style={{ fontSize: 20, fontWeight: 700, color: 'var(--text)', letterSpacing: '-0.01em' }}>
+          AlignerTrack
+        </h1>
         {treatment && (
-          <span className="text-sm text-gray-500">
+          <span style={{
+            fontSize: 12, fontWeight: 500, color: 'var(--text-muted)',
+            background: 'var(--surface)', border: '1px solid var(--border)',
+            borderRadius: 20, padding: '4px 12px',
+          }}>
             Set {treatment.currentSetNumber}
             {treatment.totalSets ? `/${treatment.totalSets}` : ''}
           </span>
@@ -83,13 +96,22 @@ export default function HomeView() {
       )}
 
       {autoCapped && (
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-sm text-amber-700">
+        <div style={{
+          background: 'var(--amber-bg)',
+          border: '1px solid rgba(252,211,77,0.2)',
+          borderRadius: 14, padding: '12px 16px',
+          fontSize: 13, color: 'var(--amber)',
+        }}>
           Session was automatically ended after {autoCapMins} minutes.
         </div>
       )}
 
-      <div className="flex justify-center py-2">
-        <TimerButton isRunning={isRunning} onPress={isRunning ? stop : start} />
+      <div style={{ display: 'flex', justifyContent: 'center', padding: '8px 0' }}>
+        <TimerButton
+          isRunning={isRunning}
+          onPress={isRunning ? stop : start}
+          budgetPercent={budgetPercent}
+        />
       </div>
 
       <DailySummary
@@ -101,7 +123,9 @@ export default function HomeView() {
       />
 
       <div>
-        <h3 className="font-semibold text-gray-700 text-sm mb-2">Today's Sessions</h3>
+        <h3 style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-muted)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10 }}>
+          Today's Sessions
+        </h3>
         <SessionList sessions={todaySessions} onEdit={setEditingSession} />
       </div>
 
@@ -126,3 +150,4 @@ export default function HomeView() {
     </div>
   )
 }
+

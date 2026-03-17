@@ -26,28 +26,62 @@ export default function TreatmentProgress({ treatment, defaultSetDurationDays }:
     ? (currentSetNumber - 1 + setProgress) / totalSets
     : null
 
+  const progressPct = overallProgress ? Math.round(overallProgress * 100) : null
+
   return (
-    <div className="bg-white rounded-2xl p-4 shadow-sm">
-      <div className="flex justify-between items-center mb-2">
-        <span className="text-sm font-semibold text-gray-600">
-          Set {currentSetNumber}{totalSets ? ` of ${totalSets}` : ''}
-        </span>
+    <div style={{
+      background: 'var(--surface)',
+      border: '1px solid var(--border)',
+      borderRadius: 20,
+      padding: '16px 18px',
+    }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 12 }}>
+        <div>
+          <span style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 500, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+            Aligner Set
+          </span>
+          <span style={{ fontSize: 22, fontWeight: 700, color: 'var(--text)', marginLeft: 10 }}>
+            {currentSetNumber}
+            {totalSets ? <span style={{ fontSize: 14, color: 'var(--text-muted)', fontWeight: 400 }}> / {totalSets}</span> : ''}
+          </span>
+        </div>
         {totalSets && (
-          <span className="text-xs text-gray-400">
-            Est. {estimatedCompletion(treatment, defaultSetDurationDays)}
+          <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+            ~{estimatedCompletion(treatment, defaultSetDurationDays)}
           </span>
         )}
       </div>
+
       {overallProgress !== null && (
-        <div className="w-full bg-gray-200 rounded-full h-2">
-          <div
-            className="bg-indigo-500 h-2 rounded-full transition-all"
-            style={{ width: `${overallProgress * 100}%` }}
-          />
+        <div style={{ marginBottom: 8 }}>
+          <div style={{
+            width: '100%',
+            height: 5,
+            background: 'var(--surface-3)',
+            borderRadius: 3,
+            overflow: 'hidden',
+          }}>
+            <div style={{
+              height: '100%',
+              width: `${overallProgress * 100}%`,
+              background: 'linear-gradient(90deg, var(--cyan), var(--green))',
+              borderRadius: 3,
+              transition: 'width 0.6s ease',
+              boxShadow: '0 0 8px var(--cyan-glow)',
+            }} />
+          </div>
         </div>
       )}
-      <div className="text-xs text-gray-400 mt-1">
-        Day {daysSinceStart + 1} of {defaultSetDurationDays}
+
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <span style={{ fontSize: 12, color: 'var(--text-faint)' }}>
+          Day {daysSinceStart + 1} of {defaultSetDurationDays}
+        </span>
+        {progressPct !== null && (
+          <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 500 }}>
+            {progressPct}% complete
+          </span>
+        )}
       </div>
     </div>
   )

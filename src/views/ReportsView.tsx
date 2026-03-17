@@ -17,7 +17,6 @@ function getTodayLocal(): string {
 
 function getDateRange(period: Exclude<Period, 'set'>): string[] {
   const todayStr = getTodayLocal()
-  // Parse as local midnight
   const today = new Date(todayStr + 'T00:00:00')
   const dates: string[] = []
 
@@ -25,7 +24,7 @@ function getDateRange(period: Exclude<Period, 'set'>): string[] {
     for (let i = 6; i >= 0; i--) {
       const d = new Date(today)
       d.setDate(today.getDate() - i)
-      dates.push(d.toLocaleDateString('sv')) // 'sv' locale gives YYYY-MM-DD in local time
+      dates.push(d.toLocaleDateString('sv'))
     }
   } else if (period === 'week') {
     const day = today.getDay()
@@ -66,23 +65,44 @@ export default function ReportsView() {
     : []
 
   return (
-    <div className="p-4 space-y-4 max-w-md mx-auto">
-      <h1 className="text-xl font-bold text-gray-800 pt-2">Reports</h1>
+    <div style={{ padding: '0 16px 16px', maxWidth: 440, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <h1 style={{ fontSize: 20, fontWeight: 700, color: 'var(--text)', letterSpacing: '-0.01em', paddingTop: 20 }}>
+        Reports
+      </h1>
 
-      <div className="flex gap-1 bg-gray-100 rounded-xl p-1">
+      {/* Tab switcher */}
+      <div style={{
+        display: 'flex', gap: 4,
+        background: 'var(--surface)',
+        border: '1px solid var(--border)',
+        borderRadius: 14, padding: 4,
+      }}>
         {tabs.map(t => (
           <button
             key={t.key}
             onClick={() => setPeriod(t.key)}
-            className={`flex-1 py-2 text-sm rounded-lg font-medium transition-colors ` +
-              (period === t.key ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-500')}
+            style={{
+              flex: 1, padding: '8px 0',
+              borderRadius: 10, border: 'none',
+              fontSize: 13, fontWeight: 500,
+              fontFamily: 'inherit', cursor: 'pointer',
+              transition: 'background 0.2s, color 0.2s',
+              background: period === t.key ? 'var(--surface-3)' : 'transparent',
+              color: period === t.key ? 'var(--cyan)' : 'var(--text-muted)',
+            }}
           >
             {t.label}
           </button>
         ))}
       </div>
 
-      {period !== 'set' && (
+      {period !== 'set' && stats.length === 0 && (
+        <p style={{ color: 'var(--text-faint)', textAlign: 'center', padding: '40px 0', fontSize: 14 }}>
+          No sessions in this period
+        </p>
+      )}
+
+      {period !== 'set' && stats.length > 0 && (
         <>
           <WearChart data={stats} goalMinutes={goalMinutes} />
           <StatsGrid stats={stats} />
@@ -90,7 +110,7 @@ export default function ReportsView() {
       )}
 
       {period === 'set' && (
-        <div className="space-y-3">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {[...sets]
             .sort((a, b) => b.setNumber - a.setNumber)
             .map(s => {
