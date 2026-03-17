@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { formatDuration, splitSessionByDay, getTimezoneOffset } from './time'
+import { formatDuration, splitSessionByDay } from './time'
 
 describe('formatDuration', () => {
   it('formats zero as 00:00:00', () => {

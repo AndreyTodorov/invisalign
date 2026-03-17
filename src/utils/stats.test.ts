@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { computeDailyStats, computeStreak } from './stats'
-import { DaySegment } from '../types'
+import type { DaySegment } from '../types'
 
 const GOAL_MINUTES = 1320 // 22h
 

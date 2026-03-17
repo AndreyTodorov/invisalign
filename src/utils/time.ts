@@ -1,4 +1,4 @@
-import { DaySegment } from '../types'
+import type { DaySegment } from '../types'
 
 /** Format total minutes (with fractional seconds) as HH:MM:SS */
 export function formatDuration(totalMinutes: number): string {

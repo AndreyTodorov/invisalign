@@ -1,4 +1,4 @@
-import { DailyStats, DaySegment } from '../types'
+import type { DailyStats, DaySegment } from '../types'
 import { MINUTES_PER_DAY } from '../constants'
 
 export function computeDailyStats(

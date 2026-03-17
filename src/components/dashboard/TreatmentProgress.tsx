@@ -1,4 +1,4 @@
-import { Treatment } from '../../types'
+import type { Treatment } from '../../types'
 
 interface Props {
   treatment: Treatment | null

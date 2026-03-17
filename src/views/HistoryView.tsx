@@ -5,7 +5,7 @@ import SessionList from '../components/dashboard/SessionList'
 import SessionEditModal from '../components/sessions/SessionEditModal'
 import AddSessionModal from '../components/sessions/AddSessionModal'
 import { toLocalDate, formatDateKey } from '../utils/time'
-import { Session } from '../types'
+import type { Session } from '../types'
 
 export default function HistoryView() {
   const { sessions } = useSessions()

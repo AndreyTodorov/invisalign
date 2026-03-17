@@ -8,7 +8,7 @@ import { useOnlineStatus } from './useOnlineStatus'
 import { getDeviceId } from '../utils/deviceId'
 import { nowISO, getTimezoneOffset } from '../utils/time'
 import { validateSession } from '../utils/sessionValidation'
-import { Session } from '../types'
+import type { Session } from '../types'
 
 export function useSessions() {
   const { user } = useAuthContext()

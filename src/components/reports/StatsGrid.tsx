@@ -1,4 +1,4 @@
-import { DailyStats } from '../../types'
+import type { DailyStats } from '../../types'
 import { computeAverageWear } from '../../utils/stats'
 import { formatDuration } from '../../utils/time'
 

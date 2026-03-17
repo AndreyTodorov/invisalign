@@ -7,7 +7,7 @@ import { useAuthContext } from '../contexts/AuthContext'
 import { useOnlineStatus } from './useOnlineStatus'
 import { getDeviceId } from '../utils/deviceId'
 import { nowISO } from '../utils/time'
-import { AlignerSet, Treatment } from '../types'
+import type { AlignerSet, Treatment } from '../types'
 
 export function useSets() {
   const { user } = useAuthContext()

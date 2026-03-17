@@ -6,7 +6,6 @@ import { update, ref, db } from '../services/firebase'
 import { localDB } from '../services/db'
 import { nowISO } from '../utils/time'
 import {
-  DEFAULT_DAILY_WEAR_GOAL_MINUTES,
   DEFAULT_REMINDER_THRESHOLD_MINUTES,
   DEFAULT_AUTO_CAP_MINUTES,
   DEFAULT_SET_DURATION_DAYS,

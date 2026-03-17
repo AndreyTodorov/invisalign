@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react'
+import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from 'react'
 import { ref, onValue, db } from '../services/firebase'
 import { drainSyncQueue, getSyncQueueCount } from '../services/syncManager'
 import { useOnlineStatus } from '../hooks/useOnlineStatus'

@@ -1,5 +1,5 @@
-import Dexie, { Table } from 'dexie'
-import { Session, AlignerSet, UserProfile, Treatment, SyncQueueItem } from '../types'
+import Dexie, { type Table } from 'dexie'
+import type { Session, AlignerSet, UserProfile, Treatment, SyncQueueItem } from '../types'
 
 interface LocalProfile extends UserProfile { uid: string }
 interface LocalTreatment extends Treatment { uid: string }

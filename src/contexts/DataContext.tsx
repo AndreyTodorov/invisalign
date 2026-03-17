@@ -1,9 +1,9 @@
 import {
-  createContext, useContext, useEffect, useState, ReactNode,
+  createContext, useContext, useEffect, useState, type ReactNode,
 } from 'react'
 import { onValue, sessionsRef, setsRef, profileRef, treatmentRef } from '../services/firebase'
 import { localDB } from '../services/db'
-import { Session, AlignerSet, UserProfile, Treatment } from '../types'
+import type { Session, AlignerSet, UserProfile, Treatment } from '../types'
 
 interface DataContextValue {
   sessions: Session[]

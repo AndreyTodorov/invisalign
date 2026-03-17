@@ -1,6 +1,6 @@
 import { ref, set, update, remove, db } from './firebase'
 import { localDB } from './db'
-import { SyncQueueItem } from '../types'
+import type { SyncQueueItem } from '../types'
 import { nowISO } from '../utils/time'
 import { SYNC_MAX_RETRIES } from '../constants'
 

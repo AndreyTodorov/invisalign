@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useSessions } from '../../hooks/useSessions'
-import { Session } from '../../types'
+import type { Session } from '../../types'
 
 // FIX CR-5: convert UTC ISO to local time for datetime-local input
 // datetime-local expects "YYYY-MM-DDTHH:MM" in LOCAL time

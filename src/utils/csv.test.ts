@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { sessionsToCSV } from './csv'
-import { Session } from '../types'
+import type { Session } from '../types'
 
 const base: Session = {
   id: 'abc', startTime: '2026-03-17T10:00:00Z', endTime: '2026-03-17T10:30:00Z',

@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { useDataContext } from '../contexts/DataContext'
 import { splitSessionByDay, formatDateKey, toLocalDate } from '../utils/time'
 import { computeDailyStats, computeStreak, computeAverageWear } from '../utils/stats'
-import { DailyStats, Session } from '../types'
+import type { DailyStats, Session } from '../types'
 
 function getSegmentsForSessions(sessions: Session[]) {
   return sessions

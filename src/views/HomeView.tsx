@@ -13,7 +13,7 @@ import TreatmentProgress from '../components/dashboard/TreatmentProgress'
 import SessionEditModal from '../components/sessions/SessionEditModal'
 import { computeDailyStats } from '../utils/stats'
 import { toLocalDate, formatDateKey } from '../utils/time'
-import { Session } from '../types'
+import type { Session } from '../types'
 import {
   DEFAULT_DAILY_WEAR_GOAL_MINUTES,
   DEFAULT_REMINDER_THRESHOLD_MINUTES,

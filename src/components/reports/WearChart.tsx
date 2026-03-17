@@ -2,7 +2,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ReferenceLine, ResponsiveContainer,
 } from 'recharts'
-import { DailyStats } from '../../types'
+import type { DailyStats } from '../../types'
 import { MINUTES_PER_DAY } from '../../constants'
 
 interface Props {
@@ -25,7 +25,7 @@ export default function WearChart({ data, goalMinutes }: Props) {
         <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
         <XAxis dataKey="date" tick={{ fontSize: 11 }} />
         <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} unit="%" />
-        <Tooltip formatter={(v: number) => [`${v}%`, 'Wear']} />
+        <Tooltip formatter={(v) => [`${v}%`, 'Wear']} />
         <ReferenceLine
           y={goalPercent}
           stroke="#ef4444"
