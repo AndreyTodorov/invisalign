@@ -4,7 +4,7 @@ import { useDataContext } from '../contexts/DataContext'
 import SessionList from '../components/dashboard/SessionList'
 import SessionEditModal from '../components/sessions/SessionEditModal'
 import AddSessionModal from '../components/sessions/AddSessionModal'
-import { toLocalDate, formatDateKey } from '../utils/time'
+import { toLocalDate, formatDateKey, formatDurationShort, diffMinutes } from '../utils/time'
 import type { Session } from '../types'
 
 export default function HistoryView() {
@@ -54,14 +54,18 @@ export default function HistoryView() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
         {sortedDates.map(date => (
           <div key={date}>
-            <div style={{
-              fontSize: 11, fontWeight: 600, color: 'var(--text-muted)',
-              letterSpacing: '0.08em', textTransform: 'uppercase',
-              marginBottom: 8,
-            }}>
-              {new Date(date + 'T12:00:00').toLocaleDateString('en-US', {
-                weekday: 'short', month: 'short', day: 'numeric',
-              })}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 8 }}>
+              <span style={{
+                fontSize: 11, fontWeight: 600, color: 'var(--text-muted)',
+                letterSpacing: '0.08em', textTransform: 'uppercase',
+              }}>
+                {new Date(date + 'T12:00:00').toLocaleDateString('en-US', {
+                  weekday: 'short', month: 'short', day: 'numeric',
+                })}
+              </span>
+              <span style={{ fontSize: 11, color: 'var(--text-faint)' }}>
+                {byDate[date].length} {byDate[date].length === 1 ? 'session' : 'sessions'} · {formatDurationShort(byDate[date].reduce((sum, s) => sum + (s.endTime ? diffMinutes(s.startTime, s.endTime) : 0), 0))}
+              </span>
             </div>
             <SessionList sessions={byDate[date]} onEdit={setEditingSession} />
           </div>

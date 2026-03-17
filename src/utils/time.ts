@@ -55,6 +55,15 @@ export function splitSessionByDay(
   return segments
 }
 
+/** Format minutes as human-readable: "45 min", "1h 20m", "2h" */
+export function formatDurationShort(totalMinutes: number): string {
+  const total = Math.floor(totalMinutes)
+  if (total < 60) return `${total} min`
+  const h = Math.floor(total / 60)
+  const m = total % 60
+  return m === 0 ? `${h}h` : `${h}h ${m}m`
+}
+
 /** Difference in minutes between two UTC ISO strings */
 export function diffMinutes(startIso: string, endIso: string): number {
   return (new Date(endIso).getTime() - new Date(startIso).getTime()) / 60_000

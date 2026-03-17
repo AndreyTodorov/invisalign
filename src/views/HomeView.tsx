@@ -12,7 +12,7 @@ import SessionList from '../components/dashboard/SessionList'
 import TreatmentProgress from '../components/dashboard/TreatmentProgress'
 import SessionEditModal from '../components/sessions/SessionEditModal'
 import { computeDailyStats } from '../utils/stats'
-import { toLocalDate, formatDateKey } from '../utils/time'
+import { toLocalDate, formatDateKey, formatDurationShort } from '../utils/time'
 import type { Session } from '../types'
 import {
   DEFAULT_DAILY_WEAR_GOAL_MINUTES,
@@ -48,6 +48,7 @@ export default function HomeView() {
   })
 
   const [editingSession, setEditingSession] = useState<Session | null>(null)
+  const [lastSession, setLastSession] = useState<{ durationMinutes: number; budgetLeftMinutes: number } | null>(null)
   const [showAlert, setShowAlert] = useState(false)
   const [alertShownForSessionRef] = useState<{ id: string | null }>({ id: null })
 
@@ -63,6 +64,17 @@ export default function HomeView() {
       alertShownForSessionRef.id = String(currentSet)
     }
   }, [reminderFired])
+
+  useEffect(() => {
+    if (isRunning) setLastSession(null)
+  }, [isRunning])
+
+  const handleStop = async () => {
+    const duration = elapsedMinutes
+    await stop()
+    const budgetLeft = Math.max(0, (MINUTES_PER_DAY - goalMinutes) - todayStats.totalOffMinutes - duration)
+    setLastSession({ durationMinutes: duration, budgetLeftMinutes: budgetLeft })
+  }
 
   const maxOffMinutes = MINUTES_PER_DAY - goalMinutes
   const usedOffMinutes = todayStats.totalOffMinutes + (isRunning ? elapsedMinutes : 0)
@@ -109,10 +121,41 @@ export default function HomeView() {
       <div style={{ display: 'flex', justifyContent: 'center', padding: '8px 0' }}>
         <TimerButton
           isRunning={isRunning}
-          onPress={isRunning ? stop : start}
+          onPress={isRunning ? handleStop : start}
           budgetPercent={budgetPercent}
         />
       </div>
+
+      {lastSession && (
+        <div
+          className="animate-fade-in"
+          style={{
+            background: 'var(--surface)',
+            border: '1px solid rgba(74,222,128,0.2)',
+            borderRadius: 16,
+            padding: '14px 18px',
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          }}
+        >
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--green)' }}>
+              Session ended
+            </div>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
+              Out for {formatDurationShort(lastSession.durationMinutes)} · {formatDurationShort(lastSession.budgetLeftMinutes)} budget left
+            </div>
+          </div>
+          <button
+            onClick={() => setLastSession(null)}
+            style={{
+              background: 'none', border: 'none', color: 'var(--text-faint)',
+              fontSize: 18, cursor: 'pointer', padding: '4px 8px', fontFamily: 'inherit',
+            }}
+          >
+            ×
+          </button>
+        </div>
+      )}
 
       <DailySummary
         totalOffMinutes={todayStats.totalOffMinutes}

@@ -1,5 +1,5 @@
 import type { Session } from '../../types'
-import { formatDuration, diffMinutes } from '../../utils/time'
+import { formatDurationShort, diffMinutes } from '../../utils/time'
 
 interface Props {
   sessions: Session[]
@@ -71,11 +71,10 @@ export default function SessionList({ sessions, onEdit }: Props) {
                 </span>
               )}
               <span style={{
-                fontFamily: "'JetBrains Mono', monospace",
                 fontSize: 14, fontWeight: 600,
                 color: 'var(--text)',
               }}>
-                {formatDuration(duration)}
+                {formatDurationShort(duration)}
               </span>
             </div>
           </button>
