@@ -11,6 +11,7 @@ import DailySummary from '../components/dashboard/DailySummary'
 import SessionList from '../components/dashboard/SessionList'
 import TreatmentProgress from '../components/dashboard/TreatmentProgress'
 import SessionEditModal from '../components/sessions/SessionEditModal'
+import AddSessionModal from '../components/sessions/AddSessionModal'
 import { computeDailyStats } from '../utils/stats'
 import { toLocalDate, formatDateKey, formatDurationShort } from '../utils/time'
 import type { Session } from '../types'
@@ -48,6 +49,7 @@ export default function HomeView() {
   })
 
   const [editingSession, setEditingSession] = useState<Session | null>(null)
+  const [showAdd, setShowAdd] = useState(false)
   const [lastSession, setLastSession] = useState<{ durationMinutes: number; budgetLeftMinutes: number } | null>(null)
   const [showAlert, setShowAlert] = useState(false)
   const [alertShownForSessionRef] = useState<{ id: string | null }>({ id: null })
@@ -144,6 +146,11 @@ export default function HomeView() {
             <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
               Out for {formatDurationShort(lastSession.durationMinutes)} · {formatDurationShort(lastSession.budgetLeftMinutes)} budget left
             </div>
+            <div style={{ fontSize: 12, marginTop: 4, color: todayStats.compliant ? 'var(--green)' : 'var(--amber)' }}>
+              {todayStats.compliant
+                ? `On track today (${Math.round(todayStats.wearPercentage)}% wear)`
+                : `${Math.round(todayStats.wearPercentage)}% wear — below goal`}
+            </div>
           </div>
           <button
             onClick={() => setLastSession(null)}
@@ -166,9 +173,22 @@ export default function HomeView() {
       />
 
       <div>
-        <h3 style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-muted)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10 }}>
-          Today's Sessions
-        </h3>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+          <h3 style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-muted)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+            Today's Sessions
+          </h3>
+          <button
+            onClick={() => setShowAdd(true)}
+            style={{
+              fontSize: 12, fontWeight: 600, color: 'var(--cyan)',
+              background: 'var(--cyan-bg)', border: '1px solid rgba(34,211,238,0.2)',
+              borderRadius: 16, padding: '3px 10px',
+              fontFamily: 'inherit', cursor: 'pointer',
+            }}
+          >
+            + Add
+          </button>
+        </div>
         <SessionList sessions={todaySessions} onEdit={setEditingSession} />
       </div>
 
@@ -190,6 +210,8 @@ export default function HomeView() {
           onClose={() => setEditingSession(null)}
         />
       )}
+
+      {showAdd && <AddSessionModal onClose={() => setShowAdd(false)} />}
     </div>
   )
 }
