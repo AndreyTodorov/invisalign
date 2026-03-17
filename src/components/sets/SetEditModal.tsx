@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useSets } from '../../hooks/useSets'
-import { addDays, dateDiffDays } from '../../utils/time'
+import { addDays, dateDiffDays, todayLocalDate } from '../../utils/time'
 import type { AlignerSet } from '../../types'
 
 interface Props {
@@ -363,7 +363,7 @@ export default function SetEditModal({ set, stats, isCurrent, prevSet, nextSet, 
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {[...sets]
-                .filter(s => s.id !== set.id)
+                .filter(s => s.id !== set.id && s.startDate.slice(0, 10) <= todayLocalDate())
                 .sort((a, b) => b.setNumber - a.setNumber)
                 .map(s => (
                   <button
