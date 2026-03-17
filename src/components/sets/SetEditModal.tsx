@@ -30,14 +30,23 @@ const btnBase: React.CSSProperties = {
 }
 
 export default function SetEditModal({ set, stats, isCurrent, prevSet, nextSet, onClose }: Props) {
-  const { updateSet } = useSets()
+  const { updateSet, updateTreatment, sets, treatment: hookTreatment } = useSets()
 
   const currentDays = set.endDate ? dateDiffDays(set.startDate, set.endDate) : null
   const [startDate, setStartDate] = useState(set.startDate.slice(0, 10))
   const [durationDays, setDurationDays] = useState(currentDays !== null ? String(currentDays) : '')
   const [note, setNote] = useState(set.note ?? '')
+  const [setNumber, setSetNumberState] = useState(String(set.setNumber))
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  const setNumberVal = parseInt(setNumber)
+  const setNumberError =
+    setNumber === '' || isNaN(setNumberVal) || setNumberVal < 1
+      ? 'Enter a valid set number'
+      : sets.find(s => s.id !== set.id && s.setNumber === setNumberVal)
+        ? `Set ${setNumberVal} already exists`
+        : null
 
   const durationNum = parseInt(durationDays)
   const durationError =
@@ -56,7 +65,7 @@ export default function SetEditModal({ set, stats, isCurrent, prevSet, nextSet, 
   // this is intentional: first-time setting an end date should cascade to the next set.
   const endChanged = computedEndDate !== null && computedEndDate !== set.endDate?.slice(0, 10)
   const noteChanged = (note.trim() || null) !== set.note
-  const setNumberChanged = false // wired up in Task 3
+  const setNumberChanged = setNumberVal !== set.setNumber && !setNumberError
   const hasChanges = startChanged || endChanged || noteChanged || setNumberChanged
 
   // Advisory text shown inline near each field
@@ -83,17 +92,18 @@ export default function SetEditModal({ set, stats, isCurrent, prevSet, nextSet, 
 
   const adjacencyError = prevOvershotError ?? nextOvershotError ?? null
 
-  const canSave = hasChanges && !saving && !durationError && !startDateError && !adjacencyError
+  const canSave = hasChanges && !saving && !durationError && !startDateError && !adjacencyError && !setNumberError
 
   const handleSave = async () => {
     if (!canSave) return
     setSaving(true)
     setError(null)
     try {
-      const updates: Partial<Pick<AlignerSet, 'startDate' | 'endDate' | 'note'>> = {
+      const updates: Partial<Pick<AlignerSet, 'startDate' | 'endDate' | 'note' | 'setNumber'>> = {
         startDate,
         endDate: computedEndDate ?? set.endDate,
         note: note.trim() || null,
+        ...(setNumberChanged ? { setNumber: setNumberVal } : {}),
       }
       await updateSet(set.id, updates)
 
@@ -103,6 +113,10 @@ export default function SetEditModal({ set, stats, isCurrent, prevSet, nextSet, 
       }
       if (computedEndDate && endChanged && nextSet) {
         await updateSet(nextSet.id, { startDate: computedEndDate })
+      }
+
+      if (setNumberChanged && isCurrent) {
+        await updateTreatment({ currentSetNumber: setNumberVal })
       }
 
       onClose()
@@ -176,6 +190,17 @@ export default function SetEditModal({ set, stats, isCurrent, prevSet, nextSet, 
             borderRadius: 10, padding: '10px 14px', margin: 0,
           }}>{error}</p>
         )}
+
+        <div>
+          <label style={labelStyle}>Set Number</label>
+          <input
+            type="number"
+            min="1"
+            value={setNumber}
+            onChange={e => setSetNumberState(e.target.value)}
+          />
+          {setNumberError && <p style={{ fontSize: 11, color: 'var(--rose)', margin: '4px 0 0' }}>{setNumberError}</p>}
+        </div>
 
         <div>
           <label style={labelStyle}>Start Date</label>
