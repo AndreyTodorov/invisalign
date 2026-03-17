@@ -30,7 +30,7 @@ const btnBase: React.CSSProperties = {
 }
 
 export default function SetEditModal({ set, stats, isCurrent, prevSet, nextSet, onClose }: Props) {
-  const { updateSet, updateTreatment, sets, treatment: hookTreatment } = useSets()
+  const { updateSet, updateTreatment, sets } = useSets()
 
   const currentDays = set.endDate ? dateDiffDays(set.startDate, set.endDate) : null
   const [startDate, setStartDate] = useState(set.startDate.slice(0, 10))
