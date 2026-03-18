@@ -5,7 +5,7 @@ import WearChart from '../components/reports/WearChart'
 import StatsGrid from '../components/reports/StatsGrid'
 import SetReportCard from '../components/reports/SetReportCard'
 import { DEFAULT_DAILY_WEAR_GOAL_MINUTES } from '../constants'
-import { dateDiffDays } from '../utils/time'
+import { dateDiffDays, formatDuration } from '../utils/time'
 import type { DailyStats } from '../types'
 
 function formatDayLabel(dateStr: string): string {
@@ -32,7 +32,7 @@ function BestWorstCallout({ stats }: { stats: DailyStats[] }) {
           Best Day
         </div>
         <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--green)', fontFamily: "'JetBrains Mono', monospace" }}>
-          {Math.round(best.wearPercentage)}%
+          {formatDuration(1440 - best.totalOffMinutes)}
         </div>
         <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
           {formatDayLabel(best.date)}
@@ -46,7 +46,7 @@ function BestWorstCallout({ stats }: { stats: DailyStats[] }) {
           Worst Day
         </div>
         <div style={{ fontSize: 16, fontWeight: 700, color: worst.compliant ? 'var(--text)' : 'var(--rose)', fontFamily: "'JetBrains Mono', monospace" }}>
-          {Math.round(worst.wearPercentage)}%
+          {formatDuration(1440 - worst.totalOffMinutes)}
         </div>
         <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
           {formatDayLabel(worst.date)}
@@ -185,7 +185,7 @@ export default function ReportsView() {
       {period !== 'set' && stats.length > 0 && (
         <>
           <WearChart data={stats} goalMinutes={goalMinutes} />
-          <StatsGrid stats={stats} />
+          <StatsGrid stats={stats} goalMinutes={goalMinutes} />
           <BestWorstCallout stats={stats} />
         </>
       )}
@@ -208,6 +208,7 @@ export default function ReportsView() {
                   current={current}
                   previous={previous}
                   durationDays={durationDays}
+                  goalMinutes={goalMinutes}
                 />
               )
             })}

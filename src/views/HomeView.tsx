@@ -221,9 +221,7 @@ export default function HomeView() {
               Out for {formatDurationShort(lastSession.durationMinutes)} · {formatDurationShort(lastSession.budgetLeftMinutes)} budget left
             </div>
             <div style={{ fontSize: 12, marginTop: 4, color: todayStats.compliant ? 'var(--green)' : 'var(--amber)' }}>
-              {todayStats.compliant
-                ? `On track today (${Math.round(todayStats.wearPercentage)}% wear)`
-                : `${Math.round(todayStats.wearPercentage)}% wear — below goal`}
+              {todayStats.compliant ? 'On track today' : 'Below goal today'}
             </div>
           </div>
           <button
@@ -243,6 +241,7 @@ export default function HomeView() {
         removals={todayStats.removals}
         goalMinutes={goalMinutes}
         streak={streak}
+        sessions={todaySessions}
         activeMinutes={isRunning ? elapsedMinutes : 0}
       />
 

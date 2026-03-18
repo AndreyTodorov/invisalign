@@ -7,7 +7,7 @@ import SessionEditModal from '../components/sessions/SessionEditModal'
 import AddSessionModal from '../components/sessions/AddSessionModal'
 import SetEditModal from '../components/sets/SetEditModal'
 import StartNewSetModal from '../components/sets/StartNewSetModal'
-import { toLocalDate, formatDateKey, formatDurationShort, diffMinutes, dateDiffDays, todayLocalDate } from '../utils/time'
+import { toLocalDate, formatDateKey, formatDuration, formatDurationShort, diffMinutes, dateDiffDays, todayLocalDate } from '../utils/time'
 import { DEFAULT_DAILY_WEAR_GOAL_MINUTES } from '../constants'
 import type { Session, AlignerSet } from '../types'
 
@@ -17,6 +17,7 @@ export default function HistoryView() {
   const { sessions } = useSessions()
   const { loaded, profile, sets, treatment } = useDataContext()
   const goalMinutes = profile?.dailyWearGoalMinutes ?? DEFAULT_DAILY_WEAR_GOAL_MINUTES
+  const goalPct = (goalMinutes / 1440) * 100
   const { getDailyStatsRange, getSetStats } = useReports(goalMinutes)
   const [tab, setTab] = useState<Tab>('sessions')
   const [editingSession, setEditingSession] = useState<Session | null>(null)
@@ -108,7 +109,6 @@ export default function HistoryView() {
               <div key={date}>
                 {(() => {
                   const dayStat = getDailyStatsRange([date])[0]
-                  const pct = Math.round(dayStat.wearPercentage)
                   return (
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                       <span style={{
@@ -130,7 +130,7 @@ export default function HistoryView() {
                           border: `1px solid ${dayStat.compliant ? 'rgba(74,222,128,0.2)' : 'rgba(248,113,113,0.2)'}`,
                           borderRadius: 6, padding: '2px 7px',
                         }}>
-                          {pct}%
+                          {formatDuration(Math.round(1440 - dayStat.totalOffMinutes))}
                         </span>
                       </div>
                     </div>
@@ -187,12 +187,12 @@ export default function HistoryView() {
                       {stats.totalRemovals > 0 && (
                         <span style={{
                           fontSize: 11, fontWeight: 600,
-                          color: stats.avgWearPct >= 95 ? 'var(--green)' : stats.avgWearPct >= 75 ? 'var(--amber)' : 'var(--rose)',
-                          background: stats.avgWearPct >= 95 ? 'rgba(74,222,128,0.1)' : stats.avgWearPct >= 75 ? 'var(--amber-bg)' : 'var(--rose-bg)',
-                          border: `1px solid ${stats.avgWearPct >= 95 ? 'rgba(74,222,128,0.2)' : stats.avgWearPct >= 75 ? 'rgba(252,211,77,0.2)' : 'rgba(248,113,113,0.2)'}`,
+                          color: stats.avgWearPct >= goalPct ? 'var(--green)' : stats.avgWearPct >= 75 ? 'var(--amber)' : 'var(--rose)',
+                          background: stats.avgWearPct >= goalPct ? 'rgba(74,222,128,0.1)' : stats.avgWearPct >= 75 ? 'var(--amber-bg)' : 'var(--rose-bg)',
+                          border: `1px solid ${stats.avgWearPct >= goalPct ? 'rgba(74,222,128,0.2)' : stats.avgWearPct >= 75 ? 'rgba(252,211,77,0.2)' : 'rgba(248,113,113,0.2)'}`,
                           borderRadius: 6, padding: '2px 7px',
                         }}>
-                          {Math.round(stats.avgWearPct)}% wear
+                          {stats.avgWearPct >= goalPct ? 'On track' : stats.avgWearPct >= 75 ? 'Near goal' : 'Below goal'}
                         </span>
                       )}
                     </div>
@@ -240,6 +240,7 @@ export default function HistoryView() {
           nextSet={sets
             .filter(s => s.id !== editingSet.id && s.startDate.slice(0, 10) > editingSet.startDate.slice(0, 10))
             .sort((a, b) => a.startDate.localeCompare(b.startDate))[0] ?? null}
+          goalMinutes={goalMinutes}
           onClose={() => setEditingSet(null)}
         />
       )}

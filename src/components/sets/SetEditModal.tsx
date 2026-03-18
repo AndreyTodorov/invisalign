@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useSets } from '../../hooks/useSets'
-import { addDays, dateDiffDays, todayLocalDate } from '../../utils/time'
+import { addDays, dateDiffDays, formatDuration, todayLocalDate } from '../../utils/time'
 import type { AlignerSet } from '../../types'
 
 interface Props {
@@ -14,6 +14,7 @@ interface Props {
   isCurrent: boolean
   prevSet: AlignerSet | null
   nextSet: AlignerSet | null
+  goalMinutes: number
   onClose: () => void
 }
 
@@ -29,7 +30,8 @@ const btnBase: React.CSSProperties = {
   fontFamily: 'inherit', cursor: 'pointer',
 }
 
-export default function SetEditModal({ set, stats, isCurrent, prevSet, nextSet, onClose }: Props) {
+export default function SetEditModal({ set, stats, isCurrent, prevSet, nextSet, goalMinutes, onClose }: Props) {
+  const goalPct = (goalMinutes / 1440) * 100
   const { updateSet, updateTreatment, deleteSet, sets } = useSets()
 
   const currentDays = set.endDate ? dateDiffDays(set.startDate, set.endDate) : null
@@ -203,7 +205,7 @@ export default function SetEditModal({ set, stats, isCurrent, prevSet, nextSet, 
           gap: 8,
         }}>
           {[
-            { label: 'Avg Wear', value: stats.totalRemovals > 0 ? `${Math.round(stats.avgWearPct)}%` : '—', color: stats.totalRemovals > 0 ? (stats.avgWearPct >= 95 ? 'var(--green)' : stats.avgWearPct >= 75 ? 'var(--amber)' : 'var(--rose)') : 'var(--text-muted)' },
+            { label: 'Avg Worn / Day', value: stats.totalRemovals > 0 ? formatDuration(Math.round(stats.avgWearPct / 100 * 1440)) : '—', color: stats.totalRemovals > 0 ? (stats.avgWearPct >= goalPct ? 'var(--green)' : stats.avgWearPct >= 75 ? 'var(--amber)' : 'var(--rose)') : 'var(--text-muted)' },
             { label: 'Sessions', value: String(stats.totalRemovals), color: 'var(--text)' },
             { label: 'Per Day', value: stats.avgRemovalsPerDay > 0 ? stats.avgRemovalsPerDay.toFixed(1) : '—', color: 'var(--text)' },
           ].map(({ label, value, color }) => (
