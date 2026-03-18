@@ -184,7 +184,7 @@ export default function ReportsView() {
 
       {period !== 'set' && stats.length > 0 && (
         <>
-          <WearChart data={stats} goalMinutes={goalMinutes} />
+          <WearChart data={stats} goalMinutes={goalMinutes} period={period as '7d' | 'week' | 'month'} />
           <StatsGrid stats={stats} goalMinutes={goalMinutes} />
           <BestWorstCallout stats={stats} />
         </>
