@@ -1,3 +1,25 @@
+# [1.5.0](https://github.com/AndreyTodorov/invisatrack/compare/v1.4.0...v1.5.0) (2026-03-18)
+
+
+### Features
+
+* add session tracking to DailySummary component and update HomeView to pass session data ([e09f3f1](https://github.com/AndreyTodorov/invisatrack/commit/e09f3f1d95bd99f3c88416b3e9a7943b81c9713c))
+* update components to incorporate goalMinutes for improved wear tracking and reporting ([6e20fa8](https://github.com/AndreyTodorov/invisatrack/commit/6e20fa83fa37aec9bcd4047076ece7acae64b291))
+
+# [1.4.0](https://github.com/AndreyTodorov/invisatrack/compare/v1.3.0...v1.4.0) (2026-03-18)
+
+
+### Features
+
+* add drop shadow effect to wear ring in DailySummary component ([6242db7](https://github.com/AndreyTodorov/invisatrack/commit/6242db72f494421e2824bf54b77400d40fc01c69))
+
+# [1.3.0](https://github.com/AndreyTodorov/invisatrack/compare/v1.2.0...v1.3.0) (2026-03-18)
+
+
+### Features
+
+* add drop shadow effect to wear ring in DailySummary component ([84c6557](https://github.com/AndreyTodorov/invisatrack/commit/84c655743b2078431e2ee528dfe8eea933471811))
+
 # [1.2.0](https://github.com/AndreyTodorov/invisatrack/compare/v1.1.0...v1.2.0) (2026-03-18)
 
 
