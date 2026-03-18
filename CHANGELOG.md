@@ -1,3 +1,11 @@
+# [1.5.0](https://github.com/AndreyTodorov/invisatrack/compare/v1.4.0...v1.5.0) (2026-03-18)
+
+
+### Features
+
+* add session tracking to DailySummary component and update HomeView to pass session data ([e09f3f1](https://github.com/AndreyTodorov/invisatrack/commit/e09f3f1d95bd99f3c88416b3e9a7943b81c9713c))
+* update components to incorporate goalMinutes for improved wear tracking and reporting ([6e20fa8](https://github.com/AndreyTodorov/invisatrack/commit/6e20fa83fa37aec9bcd4047076ece7acae64b291))
+
 # [1.4.0](https://github.com/AndreyTodorov/invisatrack/compare/v1.3.0...v1.4.0) (2026-03-18)
 
 
