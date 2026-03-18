@@ -1,3 +1,13 @@
+# [1.6.0](https://github.com/AndreyTodorov/invisatrack/compare/v1.5.0...v1.6.0) (2026-03-18)
+
+
+### Features
+
+* **reports:** add chart label, weekday x-axis, and h/m tooltip ([8d0a637](https://github.com/AndreyTodorov/invisatrack/commit/8d0a6373d5afe6956f9b53272c986ef1c62df82c))
+* **reports:** green/rose tints and larger values on Best/Worst callout cards ([e76e2a7](https://github.com/AndreyTodorov/invisatrack/commit/e76e2a7ba671c3a13df4fbbe6302229d4e75ea77))
+* **reports:** hero metric card with wear bar and 2-col secondary stats ([6fbbf44](https://github.com/AndreyTodorov/invisatrack/commit/6fbbf44f20008ba4c313fe3ac79690acc7f80cb0))
+* **reports:** wear bar in hours and larger values in By Set cards ([2894d67](https://github.com/AndreyTodorov/invisatrack/commit/2894d67334ccb732c4c255ee4a2216e6a2bf7db0))
+
 # [1.5.0](https://github.com/AndreyTodorov/invisatrack/compare/v1.4.0...v1.5.0) (2026-03-18)
 
 
