@@ -104,7 +104,15 @@ export default function DailySummary({ totalOffMinutes, removals, goalMinutes, s
           <span style={{ fontSize: 12, fontWeight: 600, color: wearColor, letterSpacing: '0.04em' }}>
             {formatDuration(wearMinutes)} worn
           </span>
-          <span style={{ fontSize: 10, color: 'var(--text-faint)' }}>24h</span>
+          <span style={{
+            fontSize: 10, fontWeight: 600, letterSpacing: '0.04em',
+            color: wearPct >= 95 ? 'var(--green)' : 'var(--amber)',
+            background: wearPct >= 95 ? 'rgba(74,222,128,0.08)' : 'rgba(251,191,36,0.08)',
+            border: `1px solid ${wearPct >= 95 ? 'rgba(74,222,128,0.2)' : 'rgba(251,191,36,0.2)'}`,
+            borderRadius: 20, padding: '2px 8px',
+          }}>
+            {wearPct >= 95 ? 'On track' : 'Below goal'}
+          </span>
         </div>
         <div style={{ width: '100%', height: 18, borderRadius: 9, overflow: 'hidden', position: 'relative', background: 'rgba(255,255,255,0.04)' }}>
           {segments.map((seg, i) => (
@@ -120,8 +128,72 @@ export default function DailySummary({ totalOffMinutes, removals, goalMinutes, s
               }}
             />
           ))}
+          {/* Hour grid lines */}
+          {Array.from({ length: 23 }, (_, i) => i + 1).map(h => (
+            <div
+              key={h}
+              style={{
+                position: 'absolute',
+                left: `${(h / 24) * 100}%`,
+                top: 0,
+                width: 1,
+                height: '100%',
+                background: h % 6 === 0 ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.07)',
+                pointerEvents: 'none',
+              }}
+            />
+          ))}
+          {/* Now indicator */}
+          <div
+            style={{
+              position: 'absolute',
+              left: `${(currentMinutes / 1440) * 100}%`,
+              top: -2,
+              width: 2,
+              height: 'calc(100% + 4px)',
+              background: 'rgba(255,255,255,0.75)',
+              borderRadius: 1,
+              boxShadow: '0 0 4px rgba(255,255,255,0.3)',
+              pointerEvents: 'none',
+              zIndex: 10,
+            }}
+          />
         </div>
-        <div style={{ display: 'flex', gap: 14, marginTop: 8 }}>
+        {/* Hour labels + now dot */}
+        <div style={{ position: 'relative', height: 14, marginTop: 3 }}>
+          {[0, 3, 6, 9, 12, 15, 18, 21, 24].map(h => (
+            <span
+              key={h}
+              style={{
+                position: 'absolute',
+                left: `${(h / 24) * 100}%`,
+                transform: h === 0 ? 'none' : h === 24 ? 'translateX(-100%)' : 'translateX(-50%)',
+                fontSize: 8,
+                color: 'var(--text-faint)',
+                userSelect: 'none',
+                lineHeight: 1,
+              }}
+            >
+              {h}
+            </span>
+          ))}
+          {/* Now dot */}
+          <div
+            style={{
+              position: 'absolute',
+              left: `${(currentMinutes / 1440) * 100}%`,
+              top: '50%',
+              width: 5,
+              height: 5,
+              borderRadius: '50%',
+              background: 'rgba(255,255,255,0.7)',
+              transform: 'translate(-50%, -50%)',
+              boxShadow: '0 0 5px rgba(255,255,255,0.35)',
+              pointerEvents: 'none',
+            }}
+          />
+        </div>
+        <div style={{ display: 'flex', gap: 14, marginTop: 4 }}>
           {([
             { bg: wearColor,                    label: 'Wearing' },
             { bg: 'rgba(248,113,113,0.55)',      label: 'Off' },
