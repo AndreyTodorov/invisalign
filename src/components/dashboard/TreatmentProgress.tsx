@@ -1,3 +1,4 @@
+import { dateDiffDays, todayLocalDate } from '../../utils/time'
 import type { Treatment } from '../../types'
 
 interface Props {
@@ -20,15 +21,12 @@ export default function TreatmentProgress({ treatment, defaultSetDurationDays, a
   if (!treatment) return null
 
   const { currentSetNumber, totalSets, currentSetStartDate } = treatment
-  const daysSinceStart = Math.floor(
-    (Date.now() - new Date(currentSetStartDate).getTime()) / (1000 * 60 * 60 * 24)
-  )
+  const daysSinceStart = dateDiffDays(currentSetStartDate.slice(0, 10), todayLocalDate())
   const setProgress = Math.min(1, daysSinceStart / defaultSetDurationDays)
   const overallProgress = totalSets
     ? (currentSetNumber - 1 + setProgress) / totalSets
     : null
 
-  const progressPct = overallProgress ? Math.round(overallProgress * 100) : null
 
   return (
     <div style={{
@@ -79,17 +77,12 @@ export default function TreatmentProgress({ treatment, defaultSetDurationDays, a
         <span style={{ fontSize: 12, color: 'var(--text-faint)' }}>
           Day {daysSinceStart + 1} of {defaultSetDurationDays}
         </span>
-        {progressPct !== null && (
-          <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 500 }}>
-            {progressPct}% complete
-          </span>
-        )}
       </div>
 
       {avgWearPct !== undefined && goalMinutes !== undefined && (() => {
         const goalPct = (goalMinutes / 1440) * 100
-        const onTrack = avgWearPct >= goalPct
         const diff = Math.abs(Math.round(avgWearPct - goalPct))
+        const onTrack = avgWearPct >= goalPct || diff === 0
         return (
           <div style={{
             marginTop: 10,
@@ -102,8 +95,8 @@ export default function TreatmentProgress({ treatment, defaultSetDurationDays, a
             <span style={{ fontSize: 13 }}>{onTrack ? '✓' : '⚠'}</span>
             <span style={{ fontSize: 12, color: onTrack ? 'var(--green)' : 'var(--amber)', fontWeight: 500 }}>
               {onTrack
-                ? `On track this set (avg ${Math.round(avgWearPct)}% wear)`
-                : `${diff}% below goal avg for this set`}
+                ? `On track this set`
+                : `Below wear goal avg for this set`}
             </span>
           </div>
         )

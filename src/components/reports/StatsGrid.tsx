@@ -4,10 +4,12 @@ import { formatDuration } from "../../utils/time";
 
 interface Props {
   stats: DailyStats[];
+  goalMinutes: number;
 }
 
-export default function StatsGrid({ stats }: Props) {
+export default function StatsGrid({ stats, goalMinutes }: Props) {
   const avgWear = computeAverageWear(stats);
+  const goalPct = (goalMinutes / 1440) * 100;
   const totalRemovals = stats.reduce((s, d) => s + d.removals, 0);
   const avgRemovals = stats.length > 0 ? totalRemovals / stats.length : 0;
   const longestRemoval =
@@ -19,10 +21,10 @@ export default function StatsGrid({ stats }: Props) {
 
   const items = [
     {
-      label: "Avg Wear",
-      value: `${avgWear.toFixed(1)}%`,
+      label: "Avg Worn / Day",
+      value: formatDuration(Math.round((1440 - totalOffMinutes / Math.max(stats.length, 1)))),
       color:
-        avgWear >= 90
+        avgWear >= goalPct
           ? "var(--green)"
           : avgWear >= 75
             ? "var(--amber)"

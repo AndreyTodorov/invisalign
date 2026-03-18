@@ -6,6 +6,7 @@ interface Props {
   current: SetStats
   previous: SetStats | null
   durationDays: number | null
+  goalMinutes: number
 }
 
 function Delta({ current, previous, suffix = '', invert = false }: {
@@ -28,15 +29,16 @@ function Delta({ current, previous, suffix = '', invert = false }: {
   )
 }
 
-export default function SetReportCard({ setNumber, current, previous, durationDays }: Props) {
+export default function SetReportCard({ setNumber, current, previous, durationDays, goalMinutes }: Props) {
+  const goalPct = (goalMinutes / 1440) * 100
   const noData = current.totalRemovals === 0 && current.complianceDays === 0
 
   const rows = [
     {
-      label: 'Avg Wear',
-      value: noData ? '—' : `${current.avgWearPct.toFixed(1)}%`,
-      delta: noData ? null : <Delta current={current.avgWearPct} previous={previous?.totalRemovals ? (previous?.avgWearPct ?? null) : null} suffix="%" />,
-      color: noData ? 'var(--text-faint)' : current.avgWearPct >= 90 ? 'var(--green)' : current.avgWearPct >= 75 ? 'var(--amber)' : 'var(--rose)',
+      label: 'Avg Worn / Day',
+      value: noData ? '—' : formatDuration(Math.round(1440 - current.avgOffMinutes)),
+      delta: noData ? null : <Delta current={1440 - current.avgOffMinutes} previous={previous?.totalRemovals ? (previous?.avgOffMinutes != null ? 1440 - previous.avgOffMinutes : null) : null} suffix="m" />,
+      color: noData ? 'var(--text-faint)' : current.avgWearPct >= goalPct ? 'var(--green)' : current.avgWearPct >= 75 ? 'var(--amber)' : 'var(--rose)',
     },
     {
       label: 'Avg Off / Day',
