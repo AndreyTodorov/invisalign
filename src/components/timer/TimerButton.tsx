@@ -1,3 +1,5 @@
+import { useRef, useEffect, useCallback } from 'react'
+
 interface Props {
   isRunning: boolean
   onPress: () => void
@@ -5,80 +7,180 @@ interface Props {
   budgetPercent?: number // 0–100, how much of daily off-budget has been consumed
 }
 
+const HOLD_MS = 1000
 const RING_R = 90
 const RING_C = 2 * Math.PI * RING_R
 
-function ringColor(pct: number): string {
-  if (pct >= 85) return 'var(--rose)'
-  if (pct >= 60) return 'var(--amber)'
-  return 'var(--cyan)'
+// Smooth color gradient: cyan → amber → orange → red
+const COLOR_STOPS: readonly [number, number, number, number][] = [
+  [0,   34,  211, 238],  // cyan
+  [20,  34,  211, 238],  // cyan (hold)
+  [50,  252, 211, 77 ],  // amber
+  [70,  251, 146, 60 ],  // orange
+  [85,  248, 113, 113],  // rose
+  [100, 220, 50,  50 ],  // deep red
+]
+
+function lerpColor(pct: number): [number, number, number] {
+  let lo = COLOR_STOPS[0]
+  let hi = COLOR_STOPS[COLOR_STOPS.length - 1]
+  for (let i = 0; i < COLOR_STOPS.length - 1; i++) {
+    if (pct >= COLOR_STOPS[i][0] && pct <= COLOR_STOPS[i + 1][0]) {
+      lo = COLOR_STOPS[i]; hi = COLOR_STOPS[i + 1]; break
+    }
+  }
+  const range = hi[0] - lo[0]
+  const t = range === 0 ? 0 : (pct - lo[0]) / range
+  const e = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t
+  return [
+    Math.round(lo[1] + (hi[1] - lo[1]) * e),
+    Math.round(lo[2] + (hi[2] - lo[2]) * e),
+    Math.round(lo[3] + (hi[3] - lo[3]) * e),
+  ]
 }
 
-function ringGlow(pct: number): string {
-  if (pct >= 85) return 'var(--rose-glow)'
-  if (pct >= 60) return 'var(--amber-bg)'
-  return 'var(--cyan-glow)'
+// Pulse duration: 3s (calm) → 0.7s (urgent), quadratic ease-in
+function pulseDuration(pct: number): number {
+  const t = pct / 100
+  return 3.0 - t * t * 2.3
 }
 
 export default function TimerButton({ isRunning, onPress, disabled, budgetPercent = 0 }: Props) {
-  const color = isRunning ? 'var(--rose)' : ringColor(budgetPercent)
-  const glow = isRunning ? 'var(--rose-glow)' : ringGlow(budgetPercent)
-  const dashOffset = RING_C * (budgetPercent / 100)
+  const glowRef      = useRef<HTMLDivElement>(null)
+  const holdRingRef  = useRef<SVGCircleElement>(null)
+  const holdTrackRef = useRef<SVGCircleElement>(null)
+  const glowRafRef   = useRef(0)
+  const holdRafRef   = useRef(0)
+  const isHoldingRef = useRef(false)
+  const holdStartRef = useRef(0)
+  const budgetRef    = useRef(budgetPercent)
+  const onPressRef   = useRef(onPress)
+
+  useEffect(() => { budgetRef.current = budgetPercent }, [budgetPercent])
+  useEffect(() => { onPressRef.current = onPress }, [onPress])
+
+  // Adaptive glow — runs at 60fps while timer is active, off otherwise
+  useEffect(() => {
+    cancelAnimationFrame(glowRafRef.current)
+    if (!isRunning) {
+      if (glowRef.current) glowRef.current.style.boxShadow = 'none'
+      return
+    }
+    let phase = 0
+    function tick() {
+      const pct = budgetRef.current
+      const dur  = pulseDuration(pct)
+      const [r, g, b] = lerpColor(pct)
+      phase += (2 * Math.PI) / (dur * 60)
+      const t     = (Math.sin(phase - Math.PI / 2) + 1) / 2
+      const alpha = 0.35 + (pct / 100) * 0.4
+      const base  = 20  + (pct / 100) * 32
+      const outer = 45  + (pct / 100) * 65
+      const a1 = Math.min(alpha * (0.5 + 0.5 * t), 0.9)
+      const a2 = Math.min(alpha * 0.4 * (0.5 + 0.5 * t), 0.5)
+      const s1 = base  * (0.6 + 0.6 * t)
+      const s2 = outer * (0.6 + 0.6 * t)
+      if (glowRef.current) {
+        glowRef.current.style.boxShadow =
+          `0 0 ${s1.toFixed(1)}px ${(s1 * 0.4).toFixed(1)}px rgba(${r},${g},${b},${a1.toFixed(2)}), ` +
+          `0 0 ${s2.toFixed(1)}px ${(s2 * 0.3).toFixed(1)}px rgba(${r},${g},${b},${a2.toFixed(2)})`
+      }
+      glowRafRef.current = requestAnimationFrame(tick)
+    }
+    glowRafRef.current = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(glowRafRef.current)
+  }, [isRunning])
+
+  const resetHold = useCallback(() => {
+    isHoldingRef.current = false
+    cancelAnimationFrame(holdRafRef.current)
+    if (holdRingRef.current) {
+      holdRingRef.current.style.opacity = '0'
+      holdRingRef.current.setAttribute('stroke-dashoffset', String(RING_C))
+    }
+    if (holdTrackRef.current) holdTrackRef.current.style.opacity = '0'
+  }, [])
+
+  const startHold = useCallback((e: React.PointerEvent<HTMLButtonElement>) => {
+    if (disabled || e.button !== 0) return
+    e.preventDefault()
+    try { e.currentTarget.setPointerCapture(e.pointerId) } catch { /* ignore */ }
+    isHoldingRef.current = true
+    holdStartRef.current = performance.now()
+    if (holdTrackRef.current) holdTrackRef.current.style.opacity = '1'
+    function tick() {
+      if (!isHoldingRef.current) return
+      const progress = Math.min((performance.now() - holdStartRef.current) / HOLD_MS, 1)
+      if (holdRingRef.current) {
+        holdRingRef.current.style.opacity = '1'
+        holdRingRef.current.setAttribute('stroke-dashoffset', String(RING_C * (1 - progress)))
+      }
+      if (progress >= 1) {
+        resetHold()
+        onPressRef.current()
+        return
+      }
+      holdRafRef.current = requestAnimationFrame(tick)
+    }
+    holdRafRef.current = requestAnimationFrame(tick)
+  }, [disabled, resetHold])
+
+  const cancelHold = useCallback(() => {
+    if (isHoldingRef.current) resetHold()
+  }, [resetHold])
+
+  useEffect(() => () => {
+    cancelAnimationFrame(glowRafRef.current)
+    cancelAnimationFrame(holdRafRef.current)
+  }, [])
+
+  const [r, g, b] = isRunning ? lerpColor(budgetPercent) : [34, 211, 238]
+  const color      = `rgb(${r},${g},${b})`
+
 
   return (
     <div style={{ position: 'relative', width: 200, height: 200 }}>
-      {/* Pulsing halo when running */}
-      {isRunning && (
-        <div style={{
-          position: 'absolute', inset: -8,
-          borderRadius: '50%',
-          border: '2px solid var(--rose)',
-          opacity: 0.4,
-          animation: 'pulse-ring 2s ease-in-out infinite',
-          pointerEvents: 'none',
-        }} />
+      {/* Adaptive glow layer */}
+      <div
+        ref={glowRef}
+        style={{ position: 'absolute', inset: 10, borderRadius: '50%', pointerEvents: 'none' }}
+      />
+
+      {/* Budget ring — only visible when timer is not running */}
+      {!isRunning && (
+        <svg width="200" height="200" style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
+          <circle cx="100" cy="100" r={RING_R} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="2" />
+          <circle
+            cx="100" cy="100" r={RING_R}
+            fill="none"
+            stroke={color}
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeDasharray={String(RING_C)}
+            strokeDashoffset={String(RING_C * (budgetPercent / 100))}
+            transform="rotate(-90 100 100)"
+            style={{
+              transition: 'stroke-dashoffset 0.8s ease, stroke 0.5s ease',
+              filter: `drop-shadow(0 0 4px ${color})`,
+            }}
+          />
+        </svg>
       )}
 
-      {/* SVG budget ring */}
-      <svg
-        width="200" height="200"
-        style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}
-      >
-        {/* Track */}
-        <circle
-          cx="100" cy="100" r={RING_R}
-          fill="none"
-          stroke="rgba(255,255,255,0.05)"
-          strokeWidth="5"
-        />
-        {/* Budget arc — shrinks as budget is consumed */}
-        <circle
-          cx="100" cy="100" r={RING_R}
-          fill="none"
-          stroke={color}
-          strokeWidth="5"
-          strokeLinecap="round"
-          strokeDasharray={`${RING_C}`}
-          strokeDashoffset={`${dashOffset}`}
-          transform="rotate(-90 100 100)"
-          style={{
-            transition: 'stroke-dashoffset 0.8s ease, stroke 0.5s ease',
-            filter: `drop-shadow(0 0 6px ${glow})`,
-          }}
-        />
-      </svg>
-
-      {/* Button circle */}
+      {/* Button */}
       <button
-        onClick={onPress}
+        onPointerDown={startHold}
+        onPointerUp={cancelHold}
+        onPointerLeave={e => { if (!e.currentTarget.hasPointerCapture(e.pointerId)) cancelHold() }}
+        onPointerCancel={cancelHold}
         disabled={disabled}
         style={{
           position: 'absolute',
           inset: 10,
           borderRadius: '50%',
-          background: isRunning ? 'var(--rose-bg)' : 'var(--surface-2)',
-          border: `1px solid ${isRunning ? 'rgba(248,113,113,0.25)' : 'var(--border-strong)'}`,
-          color: isRunning ? 'var(--rose)' : 'var(--text)',
+          background: isRunning ? `rgba(${r},${g},${b},0.09)` : 'var(--surface-2)',
+          border: 'none',
+          color: isRunning ? color : 'var(--text)',
           cursor: disabled ? 'not-allowed' : 'pointer',
           opacity: disabled ? 0.4 : 1,
           display: 'flex',
@@ -86,13 +188,11 @@ export default function TimerButton({ isRunning, onPress, disabled, budgetPercen
           alignItems: 'center',
           justifyContent: 'center',
           gap: 2,
-          transition: 'background 0.2s, transform 0.1s, border-color 0.2s',
+          transition: 'background 0.5s, border-color 0.5s, color 0.5s',
           userSelect: 'none',
           WebkitUserSelect: 'none',
+          touchAction: 'none',
         }}
-        onPointerDown={e => (e.currentTarget.style.transform = 'scale(0.94)')}
-        onPointerUp={e => (e.currentTarget.style.transform = 'scale(1)')}
-        onPointerLeave={e => (e.currentTarget.style.transform = 'scale(1)')}
       >
         {isRunning ? (
           <>
@@ -116,6 +216,32 @@ export default function TimerButton({ isRunning, onPress, disabled, budgetPercen
           </>
         )}
       </button>
+
+      {/* Hold indicator — rendered after button so it appears on top */}
+      <svg width="200" height="200" style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
+        <circle
+          ref={holdTrackRef}
+          cx="100" cy="100" r={RING_R}
+          fill="none"
+          stroke="rgba(255,255,255,0.15)"
+          strokeWidth="4"
+          opacity="0"
+          style={{ transition: 'opacity 0.1s' }}
+        />
+        <circle
+          ref={holdRingRef}
+          cx="100" cy="100" r={RING_R}
+          fill="none"
+          stroke="rgba(255,255,255,0.9)"
+          strokeWidth="4"
+          strokeLinecap="round"
+          strokeDasharray={String(RING_C)}
+          strokeDashoffset={String(RING_C)}
+          transform="rotate(-90 100 100)"
+          opacity="0"
+          style={{ filter: 'drop-shadow(0 0 5px rgba(255,255,255,0.7))' }}
+        />
+      </svg>
     </div>
   )
 }
