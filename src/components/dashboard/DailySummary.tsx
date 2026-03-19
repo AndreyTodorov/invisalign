@@ -19,7 +19,7 @@ function localMinutesFromMidnight(utcIso: string, offsetMinutes: number): number
 
 export default function DailySummary({ totalOffMinutes, removals, goalMinutes, streak, sessions = [], activeMinutes = 0 }: Props) {
   const now = new Date()
-  const currentMinutes = now.getHours() * 60 + now.getMinutes()
+  const currentMinutes = now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60
 
   const maxOffMinutes = MINUTES_PER_DAY - goalMinutes
   const usedOffMinutes = totalOffMinutes + activeMinutes
