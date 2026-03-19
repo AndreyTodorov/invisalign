@@ -1,3 +1,11 @@
+# [1.8.0](https://github.com/AndreyTodorov/invisatrack/compare/v1.7.0...v1.8.0) (2026-03-19)
+
+
+### Features
+
+* **dashboard:** standardize segment color for wearing status in DailySummary ([736c8c7](https://github.com/AndreyTodorov/invisatrack/commit/736c8c771859907e1c1ce9feae83aa755d75194f))
+* **timer:** simplify button text rendering for budget limit and aligners removal ([90fe037](https://github.com/AndreyTodorov/invisatrack/commit/90fe0377ff8075ca1936fc781ceb78a4462836e7))
+
 # [1.7.0](https://github.com/AndreyTodorov/invisatrack/compare/v1.6.0...v1.7.0) (2026-03-18)
 
 
