@@ -1,10 +1,12 @@
-import { dateDiffDays, todayLocalDate } from '../../utils/time'
+import { dateDiffDays, todayLocalDate, addDays } from '../../utils/time'
 import type { Treatment } from '../../types'
 
 interface Props {
   treatment: Treatment | null
   defaultSetDurationDays: number
+  currentSetStartDate?: string | null
   currentSetEndDate?: string | null
+  currentSetDayStatus?: Map<string, boolean>
   avgWearPct?: number  // avg wear % for the current set
   goalMinutes?: number
 }
@@ -18,11 +20,12 @@ function estimatedCompletion(treatment: Treatment, defaultDuration: number): str
   return completion.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
 }
 
-export default function TreatmentProgress({ treatment, defaultSetDurationDays, currentSetEndDate, avgWearPct, goalMinutes }: Props) {
+export default function TreatmentProgress({ treatment, defaultSetDurationDays, currentSetStartDate: currentSetStartDateProp, currentSetEndDate, currentSetDayStatus, avgWearPct, goalMinutes }: Props) {
   if (!treatment) return null
 
-  const { currentSetNumber, totalSets, currentSetStartDate } = treatment
-  const daysSinceStart = dateDiffDays(currentSetStartDate.slice(0, 10), todayLocalDate())
+  const { currentSetNumber, totalSets } = treatment
+  const currentSetStartDate = (currentSetStartDateProp || treatment.currentSetStartDate).slice(0, 10)
+  const daysSinceStart = dateDiffDays(currentSetStartDate, todayLocalDate())
   const daysLeft = currentSetEndDate
     ? dateDiffDays(todayLocalDate(), currentSetEndDate.slice(0, 10))
     : defaultSetDurationDays - daysSinceStart
@@ -80,23 +83,27 @@ export default function TreatmentProgress({ treatment, defaultSetDurationDays, c
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
           {Array.from({ length: defaultSetDurationDays }, (_, i) => {
-            const isPast  = i < daysSinceStart
-            const isToday = i === daysSinceStart
+            const squareDate = addDays(currentSetStartDate, i)
+            const today = todayLocalDate()
+            const isFuture = squareDate > today
+            const status = currentSetDayStatus?.get(squareDate)
+            const hasData = status !== undefined
             return (
               <div
                 key={i}
                 style={{
                   width: 10, height: 10, borderRadius: 3, flexShrink: 0,
-                  background: isPast
-                    ? 'var(--cyan)'
-                    : isToday
-                    ? 'var(--green)'
+                  background: isFuture
+                    ? 'var(--surface-3)'
+                    : hasData
+                    ? status ? 'var(--green)' : 'var(--rose)'
                     : 'var(--surface-3)',
-                  boxShadow: isPast
-                    ? '0 0 4px rgba(34,211,238,0.4)'
-                    : isToday
+                  boxShadow: hasData && status
                     ? '0 0 4px rgba(74,222,128,0.4)'
+                    : hasData && !status
+                    ? '0 0 4px rgba(248,113,113,0.4)'
                     : 'none',
+                  opacity: isFuture ? 0.35 : 1,
                 }}
               />
             )
