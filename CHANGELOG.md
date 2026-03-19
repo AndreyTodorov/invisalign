@@ -1,3 +1,74 @@
+# [1.11.0](https://github.com/AndreyTodorov/invisatrack/compare/v1.10.0...v1.11.0) (2026-03-19)
+
+
+### Features
+
+* **home:** show daily goal compliance heatmap in aligner set section ([8dcc84f](https://github.com/AndreyTodorov/invisatrack/commit/8dcc84f46f21ae7ca6e7db210c92ed362ddcccf2))
+* **ui:** add swipe gesture navigation for Reports and History tabs ([8a6859f](https://github.com/AndreyTodorov/invisatrack/commit/8a6859f650394e1f2f5d87717375b70bada400a6))
+
+# [1.10.0](https://github.com/AndreyTodorov/invisatrack/compare/v1.9.1...v1.10.0) (2026-03-19)
+
+
+### Bug Fixes
+
+* **calendar:** increase touch area on nav buttons for mobile ([5bbe88c](https://github.com/AndreyTodorov/invisatrack/commit/5bbe88c73d6775bb73a851e95f274fd6dd345644))
+
+
+### Features
+
+* **calendar:** replace 3-month view with single-month + prev/next navigation ([1aaa22c](https://github.com/AndreyTodorov/invisatrack/commit/1aaa22c4667bec5e01625e481b755e2d7fb3d90c))
+* **history:** add calendar heatmap, month grouping, filters, sticky headers, and wear bars ([349805f](https://github.com/AndreyTodorov/invisatrack/commit/349805f7b1d607657bd0aaac3007954c58e2e131))
+* **reports:** move wear calendar to Reports > Month tab ([9c4565c](https://github.com/AndreyTodorov/invisatrack/commit/9c4565cfb84dd1e38975e62b8106b70db8987ce9))
+* **reports:** persist selected tab to localStorage ([2930a18](https://github.com/AndreyTodorov/invisatrack/commit/2930a18a7a9cc53df2b0f68f555b3a452f67757c))
+* **ui:** add directional slide animations on tab transitions in Reports and History ([c0d5db4](https://github.com/AndreyTodorov/invisatrack/commit/c0d5db425ffd44d08d6656f227a1d1fa0c78021b))
+* **ui:** smoother tab animations + directional slide on main nav transitions ([f712867](https://github.com/AndreyTodorov/invisatrack/commit/f712867d29bfe680a8173edccbe8aef43ac79a3f))
+
+## [1.9.1](https://github.com/AndreyTodorov/invisatrack/compare/v1.9.0...v1.9.1) (2026-03-19)
+
+
+### Bug Fixes
+
+* **dashboard:** calculate days left from end date instead of duration offset ([02ea742](https://github.com/AndreyTodorov/invisatrack/commit/02ea7423ac960ff3b57c1501d2c56520b774fa73))
+
+# [1.9.0](https://github.com/AndreyTodorov/invisatrack/compare/v1.8.0...v1.9.0) (2026-03-19)
+
+
+### Bug Fixes
+
+* **home:** add autoCap dismiss, clear lastSession on start, fix indentation ([d4eff55](https://github.com/AndreyTodorov/invisatrack/commit/d4eff55df49c4a7dd539da6eb65bff854d7cca36))
+
+
+### Features
+
+* **dashboard:** add interval for updating tick based on active minutes ([99e8306](https://github.com/AndreyTodorov/invisatrack/commit/99e8306379ab50da4967820f1530438768f9853d))
+* **sessionValidation:** add future time validation for session start and end ([7bfadb3](https://github.com/AndreyTodorov/invisatrack/commit/7bfadb3d87a442e72aea666d7e921436792b97b8))
+
+# [1.8.0](https://github.com/AndreyTodorov/invisatrack/compare/v1.7.0...v1.8.0) (2026-03-19)
+
+
+### Features
+
+* **dashboard:** standardize segment color for wearing status in DailySummary ([736c8c7](https://github.com/AndreyTodorov/invisatrack/commit/736c8c771859907e1c1ce9feae83aa755d75194f))
+* **timer:** simplify button text rendering for budget limit and aligners removal ([90fe037](https://github.com/AndreyTodorov/invisatrack/commit/90fe0377ff8075ca1936fc781ceb78a4462836e7))
+
+# [1.7.0](https://github.com/AndreyTodorov/invisatrack/compare/v1.6.0...v1.7.0) (2026-03-18)
+
+
+### Features
+
+* **dashboard:** add hour grid lines and now indicator to DailySummary ([564c361](https://github.com/AndreyTodorov/invisatrack/commit/564c36150441ecf100a66a3db6bee55df3d49457))
+* **home:** improve today card, timer button, and treatment progress UI ([1364081](https://github.com/AndreyTodorov/invisatrack/commit/1364081ae3d8cb6ec328cffc2e57be8bbddac6d4))
+
+# [1.6.0](https://github.com/AndreyTodorov/invisatrack/compare/v1.5.0...v1.6.0) (2026-03-18)
+
+
+### Features
+
+* **reports:** add chart label, weekday x-axis, and h/m tooltip ([8d0a637](https://github.com/AndreyTodorov/invisatrack/commit/8d0a6373d5afe6956f9b53272c986ef1c62df82c))
+* **reports:** green/rose tints and larger values on Best/Worst callout cards ([e76e2a7](https://github.com/AndreyTodorov/invisatrack/commit/e76e2a7ba671c3a13df4fbbe6302229d4e75ea77))
+* **reports:** hero metric card with wear bar and 2-col secondary stats ([6fbbf44](https://github.com/AndreyTodorov/invisatrack/commit/6fbbf44f20008ba4c313fe3ac79690acc7f80cb0))
+* **reports:** wear bar in hours and larger values in By Set cards ([2894d67](https://github.com/AndreyTodorov/invisatrack/commit/2894d67334ccb732c4c255ee4a2216e6a2bf7db0))
+
 # [1.5.0](https://github.com/AndreyTodorov/invisatrack/compare/v1.4.0...v1.5.0) (2026-03-18)
 
 
