@@ -1,3 +1,10 @@
+## [1.12.1](https://github.com/AndreyTodorov/invisatrack/compare/v1.12.0...v1.12.1) (2026-03-19)
+
+
+### Bug Fixes
+
+* modal positioning, iOS safe area nav, and onboarding wear goal minutes ([988492a](https://github.com/AndreyTodorov/invisatrack/commit/988492a610326fc66aa20d6ed8ec8ed3ca6f5025))
+
 # [1.12.0](https://github.com/AndreyTodorov/invisatrack/compare/v1.11.1...v1.12.0) (2026-03-19)
 
 
