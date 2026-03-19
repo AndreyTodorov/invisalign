@@ -4,6 +4,7 @@ import type { Treatment } from '../../types'
 interface Props {
   treatment: Treatment | null
   defaultSetDurationDays: number
+  currentSetEndDate?: string | null
   avgWearPct?: number  // avg wear % for the current set
   goalMinutes?: number
 }
@@ -17,11 +18,14 @@ function estimatedCompletion(treatment: Treatment, defaultDuration: number): str
   return completion.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
 }
 
-export default function TreatmentProgress({ treatment, defaultSetDurationDays, avgWearPct, goalMinutes }: Props) {
+export default function TreatmentProgress({ treatment, defaultSetDurationDays, currentSetEndDate, avgWearPct, goalMinutes }: Props) {
   if (!treatment) return null
 
   const { currentSetNumber, totalSets, currentSetStartDate } = treatment
   const daysSinceStart = dateDiffDays(currentSetStartDate.slice(0, 10), todayLocalDate())
+  const daysLeft = currentSetEndDate
+    ? dateDiffDays(todayLocalDate(), currentSetEndDate.slice(0, 10))
+    : defaultSetDurationDays - daysSinceStart
   const setProgress = Math.min(1, daysSinceStart / defaultSetDurationDays)
   const overallProgress = totalSets
     ? (currentSetNumber - 1 + setProgress) / totalSets
@@ -99,7 +103,7 @@ export default function TreatmentProgress({ treatment, defaultSetDurationDays, a
           })}
         </div>
         <span style={{ fontSize: 11, color: 'var(--text-faint)' }}>
-          {Math.max(0, defaultSetDurationDays - daysSinceStart - 1)} days left
+          {Math.max(0, daysLeft)} days left
         </span>
       </div>
 
