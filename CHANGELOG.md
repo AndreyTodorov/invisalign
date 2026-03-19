@@ -1,3 +1,16 @@
+# [1.9.0](https://github.com/AndreyTodorov/invisatrack/compare/v1.8.0...v1.9.0) (2026-03-19)
+
+
+### Bug Fixes
+
+* **home:** add autoCap dismiss, clear lastSession on start, fix indentation ([d4eff55](https://github.com/AndreyTodorov/invisatrack/commit/d4eff55df49c4a7dd539da6eb65bff854d7cca36))
+
+
+### Features
+
+* **dashboard:** add interval for updating tick based on active minutes ([99e8306](https://github.com/AndreyTodorov/invisatrack/commit/99e8306379ab50da4967820f1530438768f9853d))
+* **sessionValidation:** add future time validation for session start and end ([7bfadb3](https://github.com/AndreyTodorov/invisatrack/commit/7bfadb3d87a442e72aea666d7e921436792b97b8))
+
 # [1.8.0](https://github.com/AndreyTodorov/invisatrack/compare/v1.7.0...v1.8.0) (2026-03-19)
 
 
