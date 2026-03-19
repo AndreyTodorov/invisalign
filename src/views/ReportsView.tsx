@@ -103,7 +103,14 @@ function getDateRange(period: Exclude<Period, 'set'>): string[] {
 }
 
 export default function ReportsView() {
-  const [period, setPeriod] = useState<Period>('7d')
+  const [period, setPeriod] = useState<Period>(
+    () => (localStorage.getItem('reports-period') as Period | null) ?? '7d'
+  )
+
+  const handleSetPeriod = (p: Period) => {
+    localStorage.setItem('reports-period', p)
+    setPeriod(p)
+  }
   const { profile, sets } = useDataContext()
   const goalMinutes = profile?.dailyWearGoalMinutes ?? DEFAULT_DAILY_WEAR_GOAL_MINUTES
   const { getDailyStatsRange, getSetStats, allSegments, streak } = useReports(goalMinutes)
@@ -160,7 +167,7 @@ export default function ReportsView() {
         {tabs.map(t => (
           <button
             key={t.key}
-            onClick={() => setPeriod(t.key)}
+            onClick={() => handleSetPeriod(t.key)}
             style={{
               flex: 1, padding: '8px 0',
               borderRadius: 10, border: 'none',
