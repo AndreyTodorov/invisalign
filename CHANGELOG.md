@@ -1,3 +1,10 @@
+## [1.9.1](https://github.com/AndreyTodorov/invisatrack/compare/v1.9.0...v1.9.1) (2026-03-19)
+
+
+### Bug Fixes
+
+* **dashboard:** calculate days left from end date instead of duration offset ([02ea742](https://github.com/AndreyTodorov/invisatrack/commit/02ea7423ac960ff3b57c1501d2c56520b774fa73))
+
 # [1.9.0](https://github.com/AndreyTodorov/invisatrack/compare/v1.8.0...v1.9.0) (2026-03-19)
 
 
