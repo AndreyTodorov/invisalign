@@ -278,6 +278,7 @@ export default function HomeView() {
       <TreatmentProgress
         treatment={treatment}
         defaultSetDurationDays={effectiveSetDuration}
+        currentSetEndDate={currentSetData?.endDate}
         avgWearPct={currentSetAvgWear}
         goalMinutes={goalMinutes}
       />
