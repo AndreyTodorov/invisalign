@@ -1,3 +1,10 @@
+# [1.12.0](https://github.com/AndreyTodorov/invisatrack/compare/v1.11.1...v1.12.0) (2026-03-19)
+
+
+### Features
+
+* show app version and build date in settings ([c7864c0](https://github.com/AndreyTodorov/invisatrack/commit/c7864c06e47d0d53d2bd2464948ef85334371caf))
+
 ## [1.11.1](https://github.com/AndreyTodorov/invisatrack/compare/v1.11.0...v1.11.1) (2026-03-19)
 
 
