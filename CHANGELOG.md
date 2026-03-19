@@ -1,3 +1,10 @@
+## [1.11.1](https://github.com/AndreyTodorov/invisatrack/compare/v1.11.0...v1.11.1) (2026-03-19)
+
+
+### Bug Fixes
+
+* **lint:** resolve all ESLint errors and warnings ([0c87115](https://github.com/AndreyTodorov/invisatrack/commit/0c87115cb0484447671dfa248996ef12e921ae11))
+
 # [1.11.0](https://github.com/AndreyTodorov/invisatrack/compare/v1.10.0...v1.11.0) (2026-03-19)
 
 
