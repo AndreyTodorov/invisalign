@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useReports } from '../hooks/useReports'
 import { useDataContext } from '../contexts/DataContext'
 import WearChart from '../components/reports/WearChart'
@@ -103,11 +103,17 @@ function getDateRange(period: Exclude<Period, 'set'>): string[] {
 }
 
 export default function ReportsView() {
+  const PERIOD_ORDER: Period[] = ['7d', 'week', 'month', 'set']
   const [period, setPeriod] = useState<Period>(
     () => (localStorage.getItem('reports-period') as Period | null) ?? '7d'
   )
+  const [enterClass, setEnterClass] = useState('')
+  const prevPeriodRef = useRef(period)
 
   const handleSetPeriod = (p: Period) => {
+    const dir = PERIOD_ORDER.indexOf(p) > PERIOD_ORDER.indexOf(prevPeriodRef.current) ? 'tab-enter-right' : 'tab-enter-left'
+    prevPeriodRef.current = p
+    setEnterClass(dir)
     localStorage.setItem('reports-period', p)
     setPeriod(p)
   }
@@ -183,6 +189,8 @@ export default function ReportsView() {
         ))}
       </div>
 
+      <div key={period} className={enterClass} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+
       {period !== 'set' && stats.length === 0 && (
         <div style={{ textAlign: 'center', padding: '40px 0' }}>
           <p style={{ color: 'var(--text-faint)', fontSize: 14, marginBottom: 6 }}>
@@ -240,6 +248,8 @@ export default function ReportsView() {
             })}
         </div>
       )}
+
+      </div>
     </div>
   )
 }

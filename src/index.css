@@ -105,3 +105,21 @@ input[type="number"]::-webkit-inner-spin-button {
 .animate-slide-up {
   animation: slide-up 0.35s cubic-bezier(0.32, 0.72, 0, 1) forwards;
 }
+
+@keyframes tab-enter-from-right {
+  from { opacity: 0; transform: translateX(18px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes tab-enter-from-left {
+  from { opacity: 0; transform: translateX(-18px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.tab-enter-right {
+  animation: tab-enter-from-right 0.22s ease forwards;
+}
+
+.tab-enter-left {
+  animation: tab-enter-from-left 0.22s ease forwards;
+}

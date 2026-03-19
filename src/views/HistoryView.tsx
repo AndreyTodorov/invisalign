@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useSessions } from '../hooks/useSessions'
 import { useDataContext } from '../contexts/DataContext'
 import { useReports } from '../hooks/useReports'
@@ -27,7 +27,17 @@ export default function HistoryView() {
   const goalMinutes = profile?.dailyWearGoalMinutes ?? DEFAULT_DAILY_WEAR_GOAL_MINUTES
   const goalPct = (goalMinutes / 1440) * 100
   const { getDailyStatsRange, getSetStats } = useReports(goalMinutes)
+  const TAB_ORDER: Tab[] = ['sessions', 'sets']
   const [tab, setTab] = useState<Tab>('sessions')
+  const [tabEnterClass, setTabEnterClass] = useState('')
+  const prevTabRef = useRef<Tab>('sessions')
+
+  const handleSetTab = (t: Tab) => {
+    const dir = TAB_ORDER.indexOf(t) > TAB_ORDER.indexOf(prevTabRef.current) ? 'tab-enter-right' : 'tab-enter-left'
+    prevTabRef.current = t
+    setTabEnterClass(dir)
+    setTab(t)
+  }
   const [filter, setFilter] = useState<Filter>('all')
   const [collapsedMonths, setCollapsedMonths] = useState<Set<string>>(new Set())
   const [editingSession, setEditingSession] = useState<Session | null>(null)
@@ -125,7 +135,7 @@ export default function HistoryView() {
         {(['sessions', 'sets'] as Tab[]).map(t => (
           <button
             key={t}
-            onClick={() => setTab(t)}
+            onClick={() => handleSetTab(t)}
             style={{
               flex: 1,
               background: tab === t ? 'var(--surface-3)' : 'transparent',
@@ -140,6 +150,8 @@ export default function HistoryView() {
           </button>
         ))}
       </div>
+
+      <div key={tab} className={tabEnterClass}>
 
       {tab === 'sessions' && (
         <>
@@ -373,6 +385,8 @@ export default function HistoryView() {
           </div>
         </>
       )}
+
+      </div>
 
       {editingSession && (
         <SessionEditModal session={editingSession} onClose={() => setEditingSession(null)} />
