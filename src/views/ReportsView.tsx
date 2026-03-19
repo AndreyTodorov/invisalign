@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useReports } from '../hooks/useReports'
 import { useDataContext } from '../contexts/DataContext'
 import WearChart from '../components/reports/WearChart'
 import StatsGrid from '../components/reports/StatsGrid'
 import SetReportCard from '../components/reports/SetReportCard'
+import CalendarHeatmap from '../components/dashboard/CalendarHeatmap'
 import { DEFAULT_DAILY_WEAR_GOAL_MINUTES } from '../constants'
 import { dateDiffDays, formatDuration } from '../utils/time'
 import type { DailyStats } from '../types'
@@ -102,7 +103,20 @@ function getDateRange(period: Exclude<Period, 'set'>): string[] {
 }
 
 export default function ReportsView() {
-  const [period, setPeriod] = useState<Period>('7d')
+  const PERIOD_ORDER: Period[] = ['7d', 'week', 'month', 'set']
+  const [period, setPeriod] = useState<Period>(
+    () => (localStorage.getItem('reports-period') as Period | null) ?? '7d'
+  )
+  const [enterClass, setEnterClass] = useState('')
+  const prevPeriodRef = useRef(period)
+
+  const handleSetPeriod = (p: Period) => {
+    const dir = PERIOD_ORDER.indexOf(p) > PERIOD_ORDER.indexOf(prevPeriodRef.current) ? 'tab-enter-right' : 'tab-enter-left'
+    prevPeriodRef.current = p
+    setEnterClass(dir)
+    localStorage.setItem('reports-period', p)
+    setPeriod(p)
+  }
   const { profile, sets } = useDataContext()
   const goalMinutes = profile?.dailyWearGoalMinutes ?? DEFAULT_DAILY_WEAR_GOAL_MINUTES
   const { getDailyStatsRange, getSetStats, allSegments, streak } = useReports(goalMinutes)
@@ -159,7 +173,7 @@ export default function ReportsView() {
         {tabs.map(t => (
           <button
             key={t.key}
-            onClick={() => setPeriod(t.key)}
+            onClick={() => handleSetPeriod(t.key)}
             style={{
               flex: 1, padding: '8px 0',
               borderRadius: 10, border: 'none',
@@ -174,6 +188,8 @@ export default function ReportsView() {
           </button>
         ))}
       </div>
+
+      <div key={period} className={enterClass} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
       {period !== 'set' && stats.length === 0 && (
         <div style={{ textAlign: 'center', padding: '40px 0' }}>
@@ -191,6 +207,20 @@ export default function ReportsView() {
           <WearChart data={stats} goalMinutes={goalMinutes} period={period as '7d' | 'week' | 'month'} />
           <StatsGrid stats={stats} goalMinutes={goalMinutes} />
           <BestWorstCallout stats={stats} />
+          {period === 'month' && (() => {
+            const sessionDates = new Set(allSegments.map(s => s.date))
+            const sessionDatesArr = Array.from(sessionDates)
+            const statsArr = getDailyStatsRange(sessionDatesArr)
+            const dateStatsMap = new Map(sessionDatesArr.map((d, i) => [d, statsArr[i]]))
+            return (
+              <CalendarHeatmap
+                dateStatsMap={dateStatsMap}
+                sessionDates={sessionDates}
+                goalMinutes={goalMinutes}
+                today={todayStr}
+              />
+            )
+          })()}
         </>
       )}
 
@@ -218,6 +248,8 @@ export default function ReportsView() {
             })}
         </div>
       )}
+
+      </div>
     </div>
   )
 }

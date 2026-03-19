@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useSessions } from '../hooks/useSessions'
 import { useDataContext } from '../contexts/DataContext'
 import { useReports } from '../hooks/useReports'
@@ -12,6 +12,14 @@ import { DEFAULT_DAILY_WEAR_GOAL_MINUTES } from '../constants'
 import type { Session, AlignerSet } from '../types'
 
 type Tab = 'sessions' | 'sets'
+type Filter = 'all' | 'this-set' | 'missed' | 'this-month'
+
+const FILTERS: { key: Filter; label: string }[] = [
+  { key: 'all', label: 'All' },
+  { key: 'this-set', label: 'This set' },
+  { key: 'missed', label: 'Missed days' },
+  { key: 'this-month', label: 'This month' },
+]
 
 export default function HistoryView() {
   const { sessions } = useSessions()
@@ -19,7 +27,19 @@ export default function HistoryView() {
   const goalMinutes = profile?.dailyWearGoalMinutes ?? DEFAULT_DAILY_WEAR_GOAL_MINUTES
   const goalPct = (goalMinutes / 1440) * 100
   const { getDailyStatsRange, getSetStats } = useReports(goalMinutes)
+  const TAB_ORDER: Tab[] = ['sessions', 'sets']
   const [tab, setTab] = useState<Tab>('sessions')
+  const [tabEnterClass, setTabEnterClass] = useState('')
+  const prevTabRef = useRef<Tab>('sessions')
+
+  const handleSetTab = (t: Tab) => {
+    const dir = TAB_ORDER.indexOf(t) > TAB_ORDER.indexOf(prevTabRef.current) ? 'tab-enter-right' : 'tab-enter-left'
+    prevTabRef.current = t
+    setTabEnterClass(dir)
+    setTab(t)
+  }
+  const [filter, setFilter] = useState<Filter>('all')
+  const [collapsedMonths, setCollapsedMonths] = useState<Set<string>>(new Set())
   const [editingSession, setEditingSession] = useState<Session | null>(null)
   const [editingSet, setEditingSet] = useState<AlignerSet | null>(null)
   const [showAdd, setShowAdd] = useState(false)
@@ -41,6 +61,40 @@ export default function HistoryView() {
   )
 
   const sortedSets = [...sets].sort((a, b) => b.setNumber - a.setNumber)
+  const today = todayLocalDate()
+  const currentMonth = today.slice(0, 7)
+  const currentSetStart = treatment?.currentSetStartDate.slice(0, 10) ?? today
+
+  // Precompute stats for all session dates at once
+  const allDateStatsArr = getDailyStatsRange(sortedDates)
+  const allDateStatsMap = new Map(sortedDates.map((d, i) => [d, allDateStatsArr[i]]))
+
+  // Apply filter
+  const filteredDates = sortedDates.filter(date => {
+    switch (filter) {
+      case 'this-set': return date >= currentSetStart
+      case 'missed': return !(allDateStatsMap.get(date)?.compliant ?? true)
+      case 'this-month': return date.startsWith(currentMonth)
+      default: return true
+    }
+  })
+
+  // Group by month (B)
+  const monthGroups = filteredDates.reduce<Record<string, string[]>>((acc, date) => {
+    const month = date.slice(0, 7)
+    acc[month] = [...(acc[month] ?? []), date]
+    return acc
+  }, {})
+  const sortedMonths = Object.keys(monthGroups).sort().reverse()
+
+  const toggleMonth = (month: string) => {
+    setCollapsedMonths(prev => {
+      const next = new Set(prev)
+      if (next.has(month)) next.delete(month)
+      else next.add(month)
+      return next
+    })
+  }
 
   return (
     <div style={{ padding: '0 16px 16px', maxWidth: 440, margin: '0 auto' }}>
@@ -81,7 +135,7 @@ export default function HistoryView() {
         {(['sessions', 'sets'] as Tab[]).map(t => (
           <button
             key={t}
-            onClick={() => setTab(t)}
+            onClick={() => handleSetTab(t)}
             style={{
               flex: 1,
               background: tab === t ? 'var(--surface-3)' : 'transparent',
@@ -97,48 +151,124 @@ export default function HistoryView() {
         ))}
       </div>
 
+      <div key={tab} className={tabEnterClass}>
+
       {tab === 'sessions' && (
         <>
-          {sortedDates.length === 0 && (
+          {/* (D) Filter chips */}
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 16 }}>
+            {FILTERS.map(({ key, label }) => (
+              <button
+                key={key}
+                onClick={() => setFilter(key)}
+                style={{
+                  fontSize: 12, fontWeight: filter === key ? 600 : 400,
+                  padding: '5px 12px', borderRadius: 20,
+                  background: filter === key ? 'rgba(34,211,238,0.12)' : 'var(--surface)',
+                  border: `1px solid ${filter === key ? 'rgba(34,211,238,0.3)' : 'var(--border)'}`,
+                  color: filter === key ? 'var(--cyan)' : 'var(--text-muted)',
+                  fontFamily: 'inherit', cursor: 'pointer',
+                  transition: 'all 0.15s',
+                }}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
+{filteredDates.length === 0 && (
             <p style={{ color: 'var(--text-faint)', textAlign: 'center', padding: '40px 0', fontSize: 14 }}>
-              No sessions yet
+              {filter === 'all' ? 'No sessions yet' : 'No sessions match this filter'}
             </p>
           )}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-            {sortedDates.map(date => (
-              <div key={date}>
-                {(() => {
-                  const dayStat = getDailyStatsRange([date])[0]
-                  return (
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                      <span style={{
-                        fontSize: 11, fontWeight: 600, color: 'var(--text-muted)',
-                        letterSpacing: '0.08em', textTransform: 'uppercase',
-                      }}>
-                        {new Date(date + 'T12:00:00').toLocaleDateString('en-US', {
-                          weekday: 'short', month: 'short', day: 'numeric',
-                        })}
+
+          {/* (B) Month groups */}
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            {sortedMonths.map(monthKey => {
+              const dates = monthGroups[monthKey]
+              const isCollapsed = collapsedMonths.has(monthKey)
+              const monthStatsList = dates.map(d => allDateStatsMap.get(d)!)
+              const compliantDays = monthStatsList.filter(s => s?.compliant).length
+              const totalSessions = dates.reduce((sum, d) => sum + byDate[d].length, 0)
+              const compliancePct = dates.length > 0 ? Math.round((compliantDays / dates.length) * 100) : 0
+              const monthLabel = new Date(monthKey + '-15').toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+
+              const pctColor = compliancePct >= 80 ? 'var(--green)' : compliancePct >= 60 ? 'var(--amber)' : 'var(--rose)'
+              const pctBg = compliancePct >= 80 ? 'rgba(74,222,128,0.1)' : compliancePct >= 60 ? 'var(--amber-bg)' : 'var(--rose-bg)'
+              const pctBorder = compliancePct >= 80 ? 'rgba(74,222,128,0.2)' : compliancePct >= 60 ? 'rgba(252,211,77,0.2)' : 'rgba(248,113,113,0.2)'
+
+              return (
+                <div key={monthKey} style={{ marginBottom: 24 }}>
+                  {/* (B) Month header — collapsible */}
+                  <button
+                    onClick={() => toggleMonth(monthKey)}
+                    style={{
+                      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                      width: '100%', background: 'none', border: 'none',
+                      padding: '4px 0 10px', cursor: 'pointer', fontFamily: 'inherit',
+                    }}
+                  >
+                    <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>{monthLabel}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ fontSize: 11, color: 'var(--text-faint)' }}>
+                        {totalSessions} sessions · {compliantDays}/{dates.length} days
                       </span>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <span style={{ fontSize: 11, color: 'var(--text-faint)' }}>
-                          {byDate[date].length} {byDate[date].length === 1 ? 'session' : 'sessions'} · {formatDurationShort(byDate[date].reduce((sum, s) => sum + (s.endTime ? diffMinutes(s.startTime, s.endTime) : 0), 0))}
-                        </span>
-                        <span style={{
-                          fontSize: 11, fontWeight: 600,
-                          color: dayStat.compliant ? 'var(--green)' : 'var(--rose)',
-                          background: dayStat.compliant ? 'rgba(74,222,128,0.1)' : 'var(--rose-bg)',
-                          border: `1px solid ${dayStat.compliant ? 'rgba(74,222,128,0.2)' : 'rgba(248,113,113,0.2)'}`,
-                          borderRadius: 6, padding: '2px 7px',
-                        }}>
-                          {formatDuration(Math.round(1440 - dayStat.totalOffMinutes))}
-                        </span>
-                      </div>
+                      <span style={{
+                        fontSize: 11, fontWeight: 600, padding: '2px 7px', borderRadius: 6,
+                        color: pctColor, background: pctBg, border: `1px solid ${pctBorder}`,
+                      }}>
+                        {compliancePct}%
+                      </span>
+                      <span style={{ fontSize: 10, color: 'var(--text-faint)' }}>{isCollapsed ? '▼' : '▲'}</span>
                     </div>
-                  )
-                })()}
-                <SessionList sessions={byDate[date]} onEdit={setEditingSession} />
-              </div>
-            ))}
+                  </button>
+
+                  {/* Date groups within month */}
+                  {!isCollapsed && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                      {dates.map(date => {
+                        const dayStat = allDateStatsMap.get(date)!
+                        return (
+                          <div key={date}>
+                            {/* (E) Sticky date header */}
+                            <div style={{
+                              position: 'sticky', top: 0, zIndex: 5,
+                              background: 'var(--bg)',
+                              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                              paddingTop: 4, paddingBottom: 8, marginTop: -4,
+                            }}>
+                              <span style={{
+                                fontSize: 11, fontWeight: 600, color: 'var(--text-muted)',
+                                letterSpacing: '0.08em', textTransform: 'uppercase',
+                              }}>
+                                {new Date(date + 'T12:00:00').toLocaleDateString('en-US', {
+                                  weekday: 'short', month: 'short', day: 'numeric',
+                                })}
+                              </span>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                <span style={{ fontSize: 11, color: 'var(--text-faint)' }}>
+                                  {byDate[date].length} {byDate[date].length === 1 ? 'session' : 'sessions'} · {formatDurationShort(byDate[date].reduce((sum, s) => sum + (s.endTime ? diffMinutes(s.startTime, s.endTime) : 0), 0))}
+                                </span>
+                                <span style={{
+                                  fontSize: 11, fontWeight: 600,
+                                  color: dayStat.compliant ? 'var(--green)' : 'var(--rose)',
+                                  background: dayStat.compliant ? 'rgba(74,222,128,0.1)' : 'var(--rose-bg)',
+                                  border: `1px solid ${dayStat.compliant ? 'rgba(74,222,128,0.2)' : 'rgba(248,113,113,0.2)'}`,
+                                  borderRadius: 6, padding: '2px 7px',
+                                }}>
+                                  {formatDuration(Math.round(1440 - dayStat.totalOffMinutes))}
+                                </span>
+                              </div>
+                            </div>
+                            <SessionList sessions={byDate[date]} onEdit={setEditingSession} />
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
           </div>
         </>
       )}
@@ -203,9 +333,40 @@ export default function HistoryView() {
                   </div>
 
                   {stats.totalRemovals > 0 && (
-                    <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                      {stats.totalRemovals} sessions · {stats.avgRemovalsPerDay.toFixed(1)}/day · {stats.complianceDays} compliant {stats.complianceDays === 1 ? 'day' : 'days'}
-                    </div>
+                    <>
+                      <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                        {stats.totalRemovals} sessions · {stats.avgRemovalsPerDay.toFixed(1)}/day · {stats.complianceDays} compliant {stats.complianceDays === 1 ? 'day' : 'days'}
+                      </div>
+
+                      {/* (C) Wear progress bar */}
+                      <div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                          <span style={{ fontSize: 11, color: 'var(--text-faint)' }}>Avg daily wear</span>
+                          <span style={{
+                            fontSize: 11, fontWeight: 600,
+                            color: stats.avgWearPct >= goalPct ? 'var(--green)' : stats.avgWearPct >= goalPct * 0.85 ? 'var(--amber)' : 'var(--rose)',
+                          }}>
+                            {formatDuration(Math.round(1440 - stats.avgOffMinutes))}
+                          </span>
+                        </div>
+                        <div style={{ width: '100%', height: 4, background: 'var(--surface-3)', borderRadius: 3, overflow: 'hidden' }}>
+                          <div style={{
+                            height: '100%',
+                            width: `${Math.min(100, (stats.avgWearPct / goalPct) * 100)}%`,
+                            background: stats.avgWearPct >= goalPct
+                              ? 'linear-gradient(90deg, var(--cyan), var(--green))'
+                              : stats.avgWearPct >= goalPct * 0.85
+                              ? 'var(--amber)'
+                              : 'var(--rose)',
+                            borderRadius: 3,
+                            transition: 'width 0.3s ease',
+                          }} />
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 2 }}>
+                          <span style={{ fontSize: 9, color: 'var(--text-faint)' }}>Goal: {formatDurationShort(goalMinutes)}</span>
+                        </div>
+                      </div>
+                    </>
                   )}
 
                   {s.note && (
@@ -224,6 +385,8 @@ export default function HistoryView() {
           </div>
         </>
       )}
+
+      </div>
 
       {editingSession && (
         <SessionEditModal session={editingSession} onClose={() => setEditingSession(null)} />
