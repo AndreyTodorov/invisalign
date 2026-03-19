@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTimer } from '../hooks/useTimer'
 import { useSessions } from '../hooks/useSessions'
@@ -13,7 +13,7 @@ import TreatmentProgress from '../components/dashboard/TreatmentProgress'
 import SessionEditModal from '../components/sessions/SessionEditModal'
 import AddSessionModal from '../components/sessions/AddSessionModal'
 import { computeDailyStats } from '../utils/stats'
-import { toLocalDate, formatDateKey, formatDurationShort, dateDiffDays } from '../utils/time'
+import { toLocalDate, formatDateKey, formatDurationShort, dateDiffDays, todayLocalDate } from '../utils/time'
 import type { Session } from '../types'
 import {
   DEFAULT_DAILY_WEAR_GOAL_MINUTES,
@@ -46,11 +46,27 @@ export default function HomeView() {
     : undefined
   const currentSetData = sets.find(s => s.setNumber === currentSet)
   const effectiveSetDuration = currentSetData?.endDate
-    ? dateDiffDays(currentSetData.startDate, currentSetData.endDate)
+    ? dateDiffDays(currentSetData.startDate, currentSetData.endDate) + 1
     : treatment?.defaultSetDurationDays ?? 7
 
-  // FIX LG-1: Use device local timezone to compute "today" date key
-  const todayKey = formatDateKey(toLocalDate(new Date().toISOString(), -new Date().getTimezoneOffset()))
+  const effectiveSetStartDate = (currentSetData?.startDate ?? treatment?.currentSetStartDate ?? '').slice(0, 10)
+
+  const todayKey = todayLocalDate()
+
+  const currentSetDayStatus = useMemo(() => {
+    const setEnd = currentSetData?.endDate?.slice(0, 10)
+    const map = new Map<string, boolean>()
+    const datesInSet = new Set(
+      allSegments
+        .filter(seg => seg.date >= effectiveSetStartDate && (!setEnd || seg.date <= setEnd) && seg.date <= todayKey)
+        .map(seg => seg.date)
+    )
+    datesInSet.forEach(date => {
+      const stats = computeDailyStats(date, allSegments, goalMinutes)
+      map.set(date, stats.compliant)
+    })
+    return map
+  }, [allSegments, effectiveSetStartDate, currentSetData, goalMinutes, todayKey])
 
   const todayStats = computeDailyStats(todayKey, allSegments, goalMinutes)
 
@@ -278,7 +294,9 @@ export default function HomeView() {
       <TreatmentProgress
         treatment={treatment}
         defaultSetDurationDays={effectiveSetDuration}
+        currentSetStartDate={effectiveSetStartDate}
         currentSetEndDate={currentSetData?.endDate}
+        currentSetDayStatus={currentSetDayStatus}
         avgWearPct={currentSetAvgWear}
         goalMinutes={goalMinutes}
       />
