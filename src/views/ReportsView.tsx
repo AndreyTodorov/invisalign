@@ -6,6 +6,7 @@ import WearChart from '../components/reports/WearChart'
 import StatsGrid from '../components/reports/StatsGrid'
 import SetReportCard from '../components/reports/SetReportCard'
 import CalendarHeatmap from '../components/dashboard/CalendarHeatmap'
+import NavRow from '../components/reports/NavRow'
 import { DEFAULT_DAILY_WEAR_GOAL_MINUTES } from '../constants'
 import { dateDiffDays, formatDuration } from '../utils/time'
 import type { DailyStats } from '../types'
@@ -72,12 +73,13 @@ function getTodayLocal(): string {
   return new Date(now.getTime() + offsetMs).toISOString().slice(0, 10)
 }
 
-function getDateRange(period: Exclude<Period, 'set'>): string[] {
+function getDateRange(period: Exclude<Period, 'set'>, offset: number): string[] {
   const todayStr = getTodayLocal()
   const today = new Date(todayStr + 'T00:00:00')
   const dates: string[] = []
 
   if (period === '7d') {
+    // offset ignored for 7d — always trailing 7 days
     for (let i = 6; i >= 0; i--) {
       const d = new Date(today)
       d.setDate(today.getDate() - i)
@@ -86,15 +88,17 @@ function getDateRange(period: Exclude<Period, 'set'>): string[] {
   } else if (period === 'week') {
     const day = today.getDay()
     const monday = new Date(today)
-    monday.setDate(today.getDate() - ((day + 6) % 7))
+    monday.setDate(today.getDate() - ((day + 6) % 7) - offset * 7)
     for (let i = 0; i < 7; i++) {
       const d = new Date(monday)
       d.setDate(monday.getDate() + i)
       dates.push(d.toLocaleDateString('sv'))
     }
   } else {
-    const year = today.getFullYear()
-    const month = today.getMonth()
+    // month
+    const totalMonths = today.getFullYear() * 12 + today.getMonth() - offset
+    const year = Math.floor(totalMonths / 12)
+    const month = totalMonths % 12
     const daysInMonth = new Date(year, month + 1, 0).getDate()
     for (let i = 1; i <= daysInMonth; i++) {
       const d = new Date(year, month, i)
@@ -104,12 +108,31 @@ function getDateRange(period: Exclude<Period, 'set'>): string[] {
   return dates
 }
 
+
+const PERIOD_ORDER: Period[] = ['7d', 'week', 'month', 'set']
+
+function getPeriodStart(period: 'week' | 'month', offset: number): string {
+  const todayStr = getTodayLocal()
+  const today = new Date(todayStr + 'T00:00:00')
+  if (period === 'week') {
+    const day = today.getDay()
+    const monday = new Date(today)
+    monday.setDate(today.getDate() - ((day + 6) % 7) - offset * 7)
+    return monday.toLocaleDateString('sv')
+  } else {
+    const totalMonths = today.getFullYear() * 12 + today.getMonth() - offset
+    const year = Math.floor(totalMonths / 12)
+    const month = totalMonths % 12
+    return new Date(year, month, 1).toLocaleDateString('sv')
+  }
+}
+
 export default function ReportsView() {
-  const PERIOD_ORDER: Period[] = ['7d', 'week', 'month', 'set']
   const [period, setPeriod] = useState<Period>(
     () => (localStorage.getItem('reports-period') as Period | null) ?? '7d'
   )
   const [enterClass, setEnterClass] = useState('')
+  const [offset, setOffset] = useState(0)
   const prevPeriodRef = useRef(period)
 
   const handleSetPeriod = (p: Period) => {
@@ -118,6 +141,7 @@ export default function ReportsView() {
     setEnterClass(dir)
     localStorage.setItem('reports-period', p)
     setPeriod(p)
+    setOffset(0)
   }
 
   const swipeHandlers = useSwipeTab((dir) => {
@@ -134,6 +158,46 @@ export default function ReportsView() {
     ? allSegments.reduce((min, s) => s.date < min ? s.date : min, allSegments[0].date)
     : null
 
+  // Nav helpers (only meaningful for week/month)
+  const navPeriod = period === 'week' || period === 'month' ? period : null
+
+  const isPrevDisabled = (() => {
+    if (!navPeriod || !firstSessionDate) return true
+    const currentStart = getPeriodStart(navPeriod, offset)
+    let firstPeriodStart: string
+    if (navPeriod === 'week') {
+      const d = new Date(firstSessionDate + 'T00:00:00')
+      const day = d.getDay()
+      const monday = new Date(d)
+      monday.setDate(d.getDate() - ((day + 6) % 7))
+      firstPeriodStart = monday.toLocaleDateString('sv')
+    } else {
+      firstPeriodStart = firstSessionDate.slice(0, 7) + '-01'
+    }
+    return currentStart <= firstPeriodStart
+  })()
+
+  const isNextDisabled = offset === 0
+
+  const periodLabel = (() => {
+    if (period === 'week') {
+      const startStr = getPeriodStart('week', offset)
+      const start = new Date(startStr + 'T12:00:00')
+      const end = new Date(start)
+      end.setDate(start.getDate() + 6)
+      const todayYear = new Date().getFullYear()
+      const startYear = start.getFullYear()
+      const fmt = (d: Date) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+      const yearSuffix = startYear !== todayYear ? `, ${startYear}` : ''
+      return `${fmt(start)}–${fmt(end).replace(/\w+ /, '')}${yearSuffix}`
+    } else if (period === 'month') {
+      const startStr = getPeriodStart('month', offset)
+      const d = new Date(startStr + 'T12:00:00')
+      return d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+    }
+    return period === '7d' ? 'last 7 days' : ''
+  })()
+
   const tabs: { key: Period; label: string }[] = [
     { key: '7d', label: '7 Days' },
     { key: 'week', label: 'Week' },
@@ -143,9 +207,8 @@ export default function ReportsView() {
 
   const todayStr = getTodayLocal()
   const stats = period !== 'set'
-    ? getDailyStatsRange(getDateRange(period)).filter(s => {
+    ? getDailyStatsRange(getDateRange(period, offset)).filter(s => {
         if (s.date > todayStr) return false
-        if (period === '7d') return s.removals > 0
         return firstSessionDate !== null && s.date >= firstSessionDate
       })
     : []
@@ -197,12 +260,26 @@ export default function ReportsView() {
         ))}
       </div>
 
+      {(period === 'week' || period === 'month') && (
+        <NavRow
+          label={periodLabel}
+          isPrevDisabled={isPrevDisabled}
+          isNextDisabled={isNextDisabled}
+          showToday={offset > 0}
+          onPrev={() => setOffset(o => o + 1)}
+          onNext={() => setOffset(o => o - 1)}
+          onToday={() => setOffset(0)}
+        />
+      )}
+
       <div key={period} className={enterClass} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
       {period !== 'set' && stats.length === 0 && (
         <div style={{ textAlign: 'center', padding: '40px 0' }}>
           <p style={{ color: 'var(--text-faint)', fontSize: 14, marginBottom: 6 }}>
-            No sessions recorded{period === '7d' ? ' in the last 7 days' : period === 'week' ? ' this week' : ' this month'}.
+            {period === '7d'
+              ? 'No sessions recorded in the last 7 days.'
+              : `No sessions recorded for ${periodLabel}.`}
           </p>
           <p style={{ color: 'var(--text-faint)', fontSize: 12 }}>
             Start tracking wear time to see your data here.
@@ -212,7 +289,7 @@ export default function ReportsView() {
 
       {period !== 'set' && stats.length > 0 && (
         <>
-          <WearChart data={stats} goalMinutes={goalMinutes} period={period as '7d' | 'week' | 'month'} />
+          <WearChart data={stats} goalMinutes={goalMinutes} period={period as '7d' | 'week' | 'month'} periodLabel={periodLabel} />
           <StatsGrid stats={stats} goalMinutes={goalMinutes} />
           <BestWorstCallout stats={stats} todayStr={todayStr} />
           {period === 'month' && (() => {
@@ -226,6 +303,11 @@ export default function ReportsView() {
                 sessionDates={sessionDates}
                 goalMinutes={goalMinutes}
                 today={todayStr}
+                offset={offset}
+                onPrev={() => setOffset(o => o + 1)}
+                onNext={() => setOffset(o => o - 1)}
+                onToday={() => setOffset(0)}
+                isPrevDisabled={isPrevDisabled}
               />
             )
           })()}
