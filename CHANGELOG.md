@@ -1,3 +1,10 @@
+# [1.13.0](https://github.com/AndreyTodorov/invisatrack/compare/v1.12.1...v1.13.0) (2026-03-20)
+
+
+### Features
+
+* settings nav list with profile card, swipe-back, and iOS safe area ([d908405](https://github.com/AndreyTodorov/invisatrack/commit/d908405d19c9fa5d3240617f9410be4d9d55d313))
+
 ## [1.12.1](https://github.com/AndreyTodorov/invisatrack/compare/v1.12.0...v1.12.1) (2026-03-19)
 
 
