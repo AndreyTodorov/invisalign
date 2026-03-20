@@ -1,3 +1,10 @@
+# [1.16.0](https://github.com/AndreyTodorov/invisatrack/compare/v1.15.0...v1.16.0) (2026-03-20)
+
+
+### Features
+
+* add dev seed script with auto-reload and seed user sign-in ([11dcb55](https://github.com/AndreyTodorov/invisatrack/commit/11dcb55d64fd4327742aee315d5aa98756b95aa7))
+
 # [1.15.0](https://github.com/AndreyTodorov/invisatrack/compare/v1.14.0...v1.15.0) (2026-03-20)
 
 
