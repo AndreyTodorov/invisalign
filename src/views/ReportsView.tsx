@@ -72,12 +72,13 @@ function getTodayLocal(): string {
   return new Date(now.getTime() + offsetMs).toISOString().slice(0, 10)
 }
 
-function getDateRange(period: Exclude<Period, 'set'>): string[] {
+function getDateRange(period: Exclude<Period, 'set'>, offset: number): string[] {
   const todayStr = getTodayLocal()
   const today = new Date(todayStr + 'T00:00:00')
   const dates: string[] = []
 
   if (period === '7d') {
+    // offset ignored for 7d — always trailing 7 days
     for (let i = 6; i >= 0; i--) {
       const d = new Date(today)
       d.setDate(today.getDate() - i)
@@ -86,15 +87,17 @@ function getDateRange(period: Exclude<Period, 'set'>): string[] {
   } else if (period === 'week') {
     const day = today.getDay()
     const monday = new Date(today)
-    monday.setDate(today.getDate() - ((day + 6) % 7))
+    monday.setDate(today.getDate() - ((day + 6) % 7) - offset * 7)
     for (let i = 0; i < 7; i++) {
       const d = new Date(monday)
       d.setDate(monday.getDate() + i)
       dates.push(d.toLocaleDateString('sv'))
     }
   } else {
-    const year = today.getFullYear()
-    const month = today.getMonth()
+    // month
+    const totalMonths = today.getFullYear() * 12 + today.getMonth() - offset
+    const year = Math.floor(totalMonths / 12)
+    const month = totalMonths % 12
     const daysInMonth = new Date(year, month + 1, 0).getDate()
     for (let i = 1; i <= daysInMonth; i++) {
       const d = new Date(year, month, i)
@@ -104,12 +107,100 @@ function getDateRange(period: Exclude<Period, 'set'>): string[] {
   return dates
 }
 
+function NavRow({
+  label,
+  isPrevDisabled,
+  isNextDisabled,
+  showToday,
+  onPrev,
+  onNext,
+  onToday,
+}: {
+  label: string
+  isPrevDisabled: boolean
+  isNextDisabled: boolean
+  showToday: boolean
+  onPrev: () => void
+  onNext: () => void
+  onToday: () => void
+}) {
+  const btnBase: React.CSSProperties = {
+    padding: '5px 12px',
+    borderRadius: 8,
+    border: '1px solid var(--border)',
+    background: 'transparent',
+    fontSize: 13,
+    fontFamily: 'inherit',
+    cursor: 'pointer',
+    color: 'var(--text-muted)',
+    transition: 'opacity 0.15s',
+  }
+  const btnActive: React.CSSProperties = {
+    ...btnBase,
+    color: 'var(--cyan)',
+    borderColor: 'var(--cyan)',
+  }
+  const btnDisabled: React.CSSProperties = {
+    ...btnBase,
+    opacity: 0.35,
+    cursor: 'default',
+  }
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <button
+        style={isPrevDisabled ? btnDisabled : btnBase}
+        disabled={isPrevDisabled}
+        onClick={onPrev}
+      >
+        ‹ Prev
+      </button>
+
+      <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>
+        {label}
+      </span>
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        {showToday && (
+          <button style={btnActive} onClick={onToday}>
+            Today
+          </button>
+        )}
+        <button
+          style={isNextDisabled ? btnDisabled : btnBase}
+          disabled={isNextDisabled}
+          onClick={onNext}
+        >
+          Next ›
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function getPeriodStart(period: 'week' | 'month', offset: number): string {
+  const todayStr = getTodayLocal()
+  const today = new Date(todayStr + 'T00:00:00')
+  if (period === 'week') {
+    const day = today.getDay()
+    const monday = new Date(today)
+    monday.setDate(today.getDate() - ((day + 6) % 7) - offset * 7)
+    return monday.toLocaleDateString('sv')
+  } else {
+    const totalMonths = today.getFullYear() * 12 + today.getMonth() - offset
+    const year = Math.floor(totalMonths / 12)
+    const month = totalMonths % 12
+    return new Date(year, month, 1).toLocaleDateString('sv')
+  }
+}
+
 export default function ReportsView() {
   const PERIOD_ORDER: Period[] = ['7d', 'week', 'month', 'set']
   const [period, setPeriod] = useState<Period>(
     () => (localStorage.getItem('reports-period') as Period | null) ?? '7d'
   )
   const [enterClass, setEnterClass] = useState('')
+  const [offset, setOffset] = useState(0)
   const prevPeriodRef = useRef(period)
 
   const handleSetPeriod = (p: Period) => {
@@ -118,6 +209,7 @@ export default function ReportsView() {
     setEnterClass(dir)
     localStorage.setItem('reports-period', p)
     setPeriod(p)
+    setOffset(0)
   }
 
   const swipeHandlers = useSwipeTab((dir) => {
@@ -134,6 +226,54 @@ export default function ReportsView() {
     ? allSegments.reduce((min, s) => s.date < min ? s.date : min, allSegments[0].date)
     : null
 
+  // Nav helpers (only meaningful for week/month)
+  const navPeriod = period === 'week' || period === 'month' ? period : null
+
+  const isPrevDisabled = (() => {
+    if (!navPeriod || !firstSessionDate) return true
+    const currentStart = getPeriodStart(navPeriod, offset)
+    const firstStart = getPeriodStart(navPeriod,
+      navPeriod === 'week'
+        ? (() => {
+            const todayStr = getTodayLocal()
+            const today = new Date(todayStr + 'T00:00:00')
+            const day = today.getDay()
+            const currentMonday = new Date(today)
+            currentMonday.setDate(today.getDate() - ((day + 6) % 7))
+            const firstDate = new Date(firstSessionDate + 'T00:00:00')
+            const diffDays = Math.floor((currentMonday.getTime() - firstDate.getTime()) / 86400000)
+            return Math.max(0, Math.floor(diffDays / 7))
+          })()
+        : (() => {
+            const todayStr = getTodayLocal()
+            const today = new Date(todayStr + 'T00:00:00')
+            const first = new Date(firstSessionDate + 'T00:00:00')
+            return (today.getFullYear() - first.getFullYear()) * 12 + (today.getMonth() - first.getMonth())
+          })()
+    )
+    return currentStart <= firstStart
+  })()
+
+  const isNextDisabled = offset === 0
+
+  const periodLabel = (() => {
+    if (period === 'week') {
+      const dates = getDateRange('week', offset)
+      const start = new Date(dates[0] + 'T12:00:00')
+      const end = new Date(dates[6] + 'T12:00:00')
+      const todayYear = new Date().getFullYear()
+      const startYear = start.getFullYear()
+      const fmt = (d: Date) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+      const yearSuffix = startYear !== todayYear ? `, ${startYear}` : ''
+      return `${fmt(start)}–${fmt(end).replace(/\w+ /, '')}${yearSuffix}`
+    } else if (period === 'month') {
+      const dates = getDateRange('month', offset)
+      const d = new Date(dates[0] + 'T12:00:00')
+      return d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+    }
+    return period === '7d' ? 'last 7 days' : ''
+  })()
+
   const tabs: { key: Period; label: string }[] = [
     { key: '7d', label: '7 Days' },
     { key: 'week', label: 'Week' },
@@ -143,9 +283,8 @@ export default function ReportsView() {
 
   const todayStr = getTodayLocal()
   const stats = period !== 'set'
-    ? getDailyStatsRange(getDateRange(period)).filter(s => {
+    ? getDailyStatsRange(getDateRange(period, offset)).filter(s => {
         if (s.date > todayStr) return false
-        if (period === '7d') return s.removals > 0
         return firstSessionDate !== null && s.date >= firstSessionDate
       })
     : []
@@ -196,6 +335,18 @@ export default function ReportsView() {
           </button>
         ))}
       </div>
+
+      {(period === 'week' || period === 'month') && (
+        <NavRow
+          label={periodLabel}
+          isPrevDisabled={isPrevDisabled}
+          isNextDisabled={isNextDisabled}
+          showToday={offset > 0}
+          onPrev={() => setOffset(o => o + 1)}
+          onNext={() => setOffset(o => o - 1)}
+          onToday={() => setOffset(0)}
+        />
+      )}
 
       <div key={period} className={enterClass} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
