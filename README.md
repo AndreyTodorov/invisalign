@@ -54,6 +54,9 @@ cp .env.example .env
 # Start dev server
 npm run dev
 
+# Start dev server accessible on your local network (e.g. to test on phone)
+npm run dev -- --host
+
 # Run tests
 npm test
 

@@ -179,6 +179,8 @@ export default function SetEditModal({ set, stats, isCurrent, prevSet, nextSet, 
           borderRadius: '24px 24px 0 0',
           padding: '24px 20px 36px',
           width: '100%', maxWidth: 440,
+          maxHeight: 'calc(100dvh - 40px)',
+          overflowY: 'auto',
           display: 'flex', flexDirection: 'column', gap: 18,
         }}
       >

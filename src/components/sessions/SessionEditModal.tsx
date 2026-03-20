@@ -85,6 +85,8 @@ export default function SessionEditModal({ session, onClose }: Props) {
           borderRadius: '24px 24px 0 0',
           padding: '24px 20px 36px',
           width: '100%', maxWidth: 440,
+          maxHeight: 'calc(100dvh - 40px)',
+          overflowY: 'auto',
           display: 'flex', flexDirection: 'column', gap: 18,
         }}
       >
