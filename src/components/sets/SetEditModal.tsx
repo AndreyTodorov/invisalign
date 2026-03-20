@@ -169,6 +169,7 @@ export default function SetEditModal({ set, stats, isCurrent, prevSet, nextSet, 
         backdropFilter: 'blur(8px)',
         WebkitBackdropFilter: 'blur(8px)',
         display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+        overflow: 'hidden',
         zIndex: 100,
       }}
     >
@@ -182,8 +183,9 @@ export default function SetEditModal({ set, stats, isCurrent, prevSet, nextSet, 
           borderRadius: '24px 24px 0 0',
           padding: '24px 20px 36px',
           width: '100%', maxWidth: 440,
-          maxHeight: 'calc(100dvh - 40px)',
+          maxHeight: 'calc(100% - 40px)',
           overflowY: 'auto',
+          WebkitOverflowScrolling: 'touch',
           display: 'flex', flexDirection: 'column', gap: 18,
         }}
       >
