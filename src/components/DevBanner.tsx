@@ -1,8 +1,8 @@
 import { useEffect } from 'react'
 
-export default function DevBanner() {
-  const isDev = import.meta.env.VITE_USE_EMULATOR === 'true'
+const isDev = import.meta.env.VITE_USE_EMULATOR === 'true'
 
+export default function DevBanner() {
   useEffect(() => {
     if (!isDev) return
     const original = document.title
@@ -10,7 +10,7 @@ export default function DevBanner() {
       document.title = '[DEV] ' + original
     }
     return () => { document.title = original }
-  }, [isDev])
+  }, [])
 
   if (!isDev) return null
 

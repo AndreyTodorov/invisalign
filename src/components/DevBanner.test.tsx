@@ -1,33 +1,42 @@
 import { render, screen } from '@testing-library/react'
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest'
-import DevBanner from './DevBanner'
 
 describe('DevBanner', () => {
   const originalTitle = document.title
+  let DevBanner: React.ComponentType
 
   afterEach(() => {
     document.title = originalTitle
     vi.unstubAllEnvs()
+    vi.resetModules()
   })
 
   describe('when VITE_USE_EMULATOR is not set', () => {
-    it('renders nothing', () => {
+    beforeEach(async () => {
       vi.stubEnv('VITE_USE_EMULATOR', '')
+      vi.resetModules()
+      const mod = await import('./DevBanner')
+      DevBanner = mod.default
+    })
+
+    it('renders nothing', () => {
       const { container } = render(<DevBanner />)
       expect(container.firstChild).toBeNull()
     })
 
     it('does not modify document.title', () => {
       document.title = 'InvisaTrack'
-      vi.stubEnv('VITE_USE_EMULATOR', '')
       render(<DevBanner />)
       expect(document.title).toBe('InvisaTrack')
     })
   })
 
   describe('when VITE_USE_EMULATOR is "true"', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       vi.stubEnv('VITE_USE_EMULATOR', 'true')
+      vi.resetModules()
+      const mod = await import('./DevBanner')
+      DevBanner = mod.default
     })
 
     it('renders the developer mode banner', () => {
