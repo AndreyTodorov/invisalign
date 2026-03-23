@@ -230,7 +230,7 @@ Theme switching is implemented as a CSS custom property override system: the exi
 
 ### Tasks
 
-- [ ] Write `resolveTheme` unit tests — `src/themes.test.ts` — **new file**:
+- [x] Write `resolveTheme` unit tests — `src/themes.test.ts` — **new file**:
   - `resolveTheme(null)` → `'obsidian'`
   - `resolveTheme(undefined)` → `'obsidian'`
   - `resolveTheme('')` → `'obsidian'`
@@ -238,7 +238,7 @@ Theme switching is implemented as a CSS custom property override system: the exi
   - `resolveTheme('obsidian')` → `'obsidian'`
   - `resolveTheme('neobrutalism')` → `'neobrutalism'`
 
-- [ ] Write `ThemeContext` unit tests — `src/contexts/ThemeContext.test.tsx` — **new file** using `@testing-library/react`:
+- [x] Write `ThemeContext` unit tests — `src/contexts/ThemeContext.test.tsx` — **new file** using `@testing-library/react`:
   - Mock `DataContext` at the top of the file using the same pattern as `HomeView.test.tsx`: `vi.mock('../contexts/DataContext', () => ({ useDataContext: vi.fn() }))`. Configure `useDataContext` to return `{ profile: null }` by default, and override per-test with `vi.mocked(useDataContext).mockReturnValue({ profile: { theme: '...' } })`.
   - Renders without crashing when `profile` is null → `document.documentElement.dataset.theme` is `'obsidian'`.
   - When `profile.theme = 'neobrutalism'` is provided, `document.documentElement.dataset.theme` becomes `'neobrutalism'`.
