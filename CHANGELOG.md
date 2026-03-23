@@ -1,3 +1,10 @@
+## [1.17.4](https://github.com/AndreyTodorov/invisatrack/compare/v1.17.3...v1.17.4) (2026-03-23)
+
+
+### Bug Fixes
+
+* prevent stale Firebase data from reverting completed sessions to active ([9e69659](https://github.com/AndreyTodorov/invisatrack/commit/9e696591df63ff87c44123fab19e27ba562b105d))
+
 ## [1.17.3](https://github.com/AndreyTodorov/invisatrack/compare/v1.17.2...v1.17.3) (2026-03-20)
 
 
