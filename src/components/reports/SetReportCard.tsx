@@ -91,8 +91,8 @@ export default function SetReportCard({ setNumber, current, previous, durationDa
   return (
     <div style={{
       background: 'var(--surface)',
-      border: '1px solid var(--border)',
-      borderRadius: 18, padding: '16px 18px',
+      border: 'var(--border-width) solid var(--border)',
+      borderRadius: 'var(--radius-card)', boxShadow: 'var(--card-shadow)', padding: '16px 18px',
     }}>
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>

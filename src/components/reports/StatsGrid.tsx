@@ -59,8 +59,9 @@ export default function StatsGrid({ stats, goalMinutes }: Props) {
         style={{
           background:
             "linear-gradient(135deg, rgba(34,211,238,0.06) 0%, rgba(34,211,238,0.02) 100%)",
-          border: "1px solid rgba(34,211,238,0.2)",
-          borderRadius: 14,
+          border: "var(--border-width) solid rgba(34,211,238,0.2)",
+          borderRadius: "var(--radius-card)",
+          boxShadow: "var(--card-shadow)",
           padding: "14px 14px 12px",
         }}
       >
@@ -104,8 +105,8 @@ export default function StatsGrid({ stats, goalMinutes }: Props) {
               fontWeight: 600,
               color: badgeColor.color,
               background: badgeColor.bg,
-              border: `1px solid ${badgeColor.border}`,
-              borderRadius: 6,
+              border: `var(--border-width) solid ${badgeColor.border}`,
+              borderRadius: "var(--radius-badge)",
               padding: "3px 7px",
               whiteSpace: "nowrap",
               marginTop: 2,
@@ -160,8 +161,9 @@ export default function StatsGrid({ stats, goalMinutes }: Props) {
             key={item.label}
             style={{
               background: "var(--surface)",
-              border: "1px solid var(--border)",
-              borderRadius: 12,
+              border: "var(--border-width) solid var(--border)",
+              borderRadius: "var(--radius-card)",
+              boxShadow: "var(--card-shadow)",
               padding: "11px 12px",
               display: "flex",
               flexDirection: "column",
