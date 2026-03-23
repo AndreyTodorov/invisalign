@@ -65,8 +65,12 @@ describe('THEMES array — structure and ordering', () => {
     expect(THEMES[0].id).toBe('obsidian')
   })
 
-  it('neobrutalism is the second theme', () => {
-    expect(THEMES[1].id).toBe('neobrutalism')
+  it('light is the second theme', () => {
+    expect(THEMES[1].id).toBe('light')
+  })
+
+  it('neobrutalism is the third theme', () => {
+    expect(THEMES[2].id).toBe('neobrutalism')
   })
 
   it('every theme has an id, name, and exactly 3 swatch colors', () => {

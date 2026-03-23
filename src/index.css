@@ -26,9 +26,15 @@
 
   --green: #4ADE80;
   --green-bg: rgba(74, 222, 128, 0.09);
+
+  --radius-card: 18px;
+  --radius-btn: 12px;
+  --radius-badge: 6px;
+  --card-shadow: none;
+  --border-width: 1px;
 }
 
-[data-theme="neobrutalism"] {
+[data-theme="light"] {
   --bg: #FFFBF0;
   --surface: #FFFFFF;
   --surface-2: #F5F0E8;
@@ -53,6 +59,39 @@
 
   --green: #00C752;
   --green-bg: rgba(0, 199, 82, 0.1);
+}
+
+[data-theme="neobrutalism"] {
+  --bg: #FAFAFA;
+  --surface: #FFFFFF;
+  --surface-2: #F5F5F5;
+  --surface-3: #EBEBEB;
+  --border: #0D0D0D;
+  --border-strong: #000000;
+
+  --text: #0D0D0D;
+  --text-muted: #2D2D2D;
+  --text-faint: #6B6B6B;
+
+  --cyan: #FFD400;
+  --cyan-bg: rgba(255, 212, 0, 0.12);
+  --cyan-glow: rgba(255, 212, 0, 0.35);
+
+  --rose: #FF1744;
+  --rose-bg: rgba(255, 23, 68, 0.1);
+  --rose-glow: rgba(255, 23, 68, 0.25);
+
+  --amber: #FF9100;
+  --amber-bg: rgba(255, 145, 0, 0.12);
+
+  --green: #00C853;
+  --green-bg: rgba(0, 200, 83, 0.1);
+
+  --radius-card: 4px;
+  --radius-btn: 4px;
+  --radius-badge: 4px;
+  --card-shadow: 4px 4px 0 #000000;
+  --border-width: 2px;
 }
 
 * {

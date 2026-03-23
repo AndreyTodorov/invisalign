@@ -21,8 +21,8 @@ function ProfileCard({ user, onSignOut }: { user: import('firebase/auth').User; 
 
   return (
     <div style={{
-      background: 'var(--surface)', border: '1px solid var(--border)',
-      borderRadius: 18, padding: '16px 18px',
+      background: 'var(--surface)', border: 'var(--border-width) solid var(--border)',
+      borderRadius: 'var(--radius-card)', boxShadow: 'var(--card-shadow)', padding: '16px 18px',
       display: 'flex', alignItems: 'center', gap: 14,
     }}>
       {user.photoURL
@@ -92,7 +92,7 @@ function ProfileCard({ user, onSignOut }: { user: import('firebase/auth').User; 
 type Section = 'wear' | 'treatment' | 'data' | 'appearance'
 
 const rowCard: React.CSSProperties = {
-  background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 18, padding: '4px 0',
+  background: 'var(--surface)', border: 'var(--border-width) solid var(--border)', borderRadius: 'var(--radius-card)', padding: '4px 0', boxShadow: 'var(--card-shadow)',
 }
 const rowDivider = <div style={{ height: 1, background: 'var(--border)', margin: '0 18px' }} />
 const rowStyle: React.CSSProperties = {
@@ -462,7 +462,7 @@ export default function SettingsPageView() {
 
         {user && <ProfileCard user={user} onSignOut={signOut} />}
 
-        <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 18, padding: '4px 0' }}>
+        <div style={{ background: 'var(--surface)', border: 'var(--border-width) solid var(--border)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--card-shadow)', padding: '4px 0' }}>
           <NavRow
             icon="⏱" iconBg="rgba(34,211,238,0.12)"
             title="Wear Goal" summary={wearSummary}

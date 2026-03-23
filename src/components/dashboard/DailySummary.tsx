@@ -97,8 +97,9 @@ export default function DailySummary({ totalOffMinutes, removals, goalMinutes, s
   return (
     <div style={{
       background: 'var(--surface)',
-      border: '1px solid var(--border)',
-      borderRadius: 20,
+      border: 'var(--border-width) solid var(--border)',
+      borderRadius: 'var(--radius-card)',
+      boxShadow: 'var(--card-shadow)',
       padding: '16px 18px',
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>

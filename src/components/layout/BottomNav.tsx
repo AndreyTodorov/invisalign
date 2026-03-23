@@ -52,7 +52,7 @@ export default function BottomNav() {
       background: 'color-mix(in srgb, var(--bg) 92%, transparent)',
       backdropFilter: 'blur(24px)',
       WebkitBackdropFilter: 'blur(24px)',
-      borderTop: '1px solid var(--border)',
+      borderTop: 'var(--border-width) solid var(--border)',
       display: 'flex',
       paddingBottom: 'env(safe-area-inset-bottom)',
       zIndex: 50,

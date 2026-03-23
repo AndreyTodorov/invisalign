@@ -181,8 +181,8 @@ export default function HomeView() {
       {autoAdvancedSets.length > 0 && (
         <div style={{
           background: 'var(--surface)',
-          border: '1px solid rgba(34,211,238,0.2)',
-          borderRadius: 14, padding: '12px 16px',
+          border: 'var(--border-width) solid rgba(34,211,238,0.2)',
+          borderRadius: 'var(--radius-card)', padding: '12px 16px',
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
         }}>
           <span style={{ fontSize: 13, color: 'var(--cyan)' }}>
@@ -200,8 +200,8 @@ export default function HomeView() {
       {autoCapped && !autoCappedDismissed && (
         <div style={{
           background: 'var(--amber-bg)',
-          border: '1px solid rgba(252,211,77,0.2)',
-          borderRadius: 14, padding: '12px 16px',
+          border: 'var(--border-width) solid rgba(252,211,77,0.2)',
+          borderRadius: 'var(--radius-card)', padding: '12px 16px',
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
           fontSize: 13, color: 'var(--amber)',
         }}>
@@ -228,8 +228,8 @@ export default function HomeView() {
           className="animate-fade-in"
           style={{
             background: 'var(--surface)',
-            border: '1px solid rgba(74,222,128,0.2)',
-            borderRadius: 16,
+            border: 'var(--border-width) solid rgba(74,222,128,0.2)',
+            borderRadius: 'var(--radius-card)',
             padding: '14px 18px',
             display: 'flex', justifyContent: 'space-between', alignItems: 'center',
           }}
