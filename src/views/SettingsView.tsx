@@ -1,11 +1,13 @@
 import { useState, useEffect, useRef } from 'react'
 import { useAuthContext } from '../contexts/AuthContext'
 import { useDataContext } from '../contexts/DataContext'
+import { useTheme } from '../contexts/ThemeContext'
 import { useSets } from '../hooks/useSets'
 import ExportButton from '../components/settings/ExportButton'
 import { update, ref, db } from '../services/firebase'
 import { localDB } from '../services/db'
 import { addDays, dateDiffDays } from '../utils/time'
+import { THEMES } from '../themes'
 import {
   DEFAULT_DAILY_WEAR_GOAL_MINUTES,
   DEFAULT_REMINDER_THRESHOLD_MINUTES,
@@ -87,7 +89,7 @@ function ProfileCard({ user, onSignOut }: { user: import('firebase/auth').User; 
   )
 }
 
-type Section = 'wear' | 'treatment' | 'data'
+type Section = 'wear' | 'treatment' | 'data' | 'appearance'
 
 const rowCard: React.CSSProperties = {
   background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 18, padding: '4px 0',
@@ -198,6 +200,7 @@ function FieldError({ message }: { message?: string }) {
 export default function SettingsPageView() {
   const { user, signOut } = useAuthContext()
   const { profile, treatment, sets } = useDataContext()
+  const { savedThemeId, previewThemeId, setPreviewThemeId } = useTheme()
   const { updateTreatment, updateSet } = useSets()
 
   const [activeSection, setActiveSection] = useState<Section | null>(null)
@@ -228,6 +231,7 @@ export default function SettingsPageView() {
 
   const [profileSaveState, setProfileSaveState] = useState<SaveState>('idle')
   const [treatmentSaveState, setTreatmentSaveState] = useState<SaveState>('idle')
+  const [appearanceSaveState, setAppearanceSaveState] = useState<SaveState>('idle')
 
   const [touched, setTouched] = useState({
     goalHours: false, goalMins: false, reminderMins: false, autoCapMins: false, defaultDuration: false,
@@ -362,6 +366,25 @@ export default function SettingsPageView() {
     }
   }
 
+  const saveAppearance = async () => {
+    if (!user) return
+    setAppearanceSaveState('saving')
+    try {
+      const themeUpdate = { theme: previewThemeId }
+      await update(ref(db, `users/${user.uid}/profile`), themeUpdate)
+      const updated = await localDB.profile.update(user.uid, themeUpdate)
+      if (updated === 0 && profile) {
+        await localDB.profile.put({ uid: user.uid, ...profile, ...themeUpdate })
+      }
+      localStorage.setItem('theme', previewThemeId)
+      setAppearanceSaveState('saved')
+      setTimeout(() => setAppearanceSaveState('idle'), 2000)
+    } catch {
+      setAppearanceSaveState('error')
+      setTimeout(() => setAppearanceSaveState('idle'), 3000)
+    }
+  }
+
   // Swipe-right-to-go-back (edge swipe, like iOS)
   const touchStartX = useRef<number>(0)
   const touchStartY = useRef<number>(0)
@@ -372,11 +395,15 @@ export default function SettingsPageView() {
   const handleTouchEnd = (e: React.TouchEvent) => {
     const dx = e.changedTouches[0].clientX - touchStartX.current
     const dy = Math.abs(e.changedTouches[0].clientY - touchStartY.current)
-    if (touchStartX.current < 40 && dx > 60 && dx > dy) navigateTo(null, 'pop')
+    if (touchStartX.current < 40 && dx > 60 && dx > dy) {
+      if (activeSection === 'appearance') setPreviewThemeId(savedThemeId)
+      navigateTo(null, 'pop')
+    }
   }
 
   // Summaries shown in nav list rows
   const wearSummary = `${goalHours}h ${goalMins}m · ${reminderMins}min reminder`
+  const appearanceSummary = THEMES.find(t => t.id === savedThemeId)?.name ?? 'Obsidian'
   const treatmentSummary = treatment
     ? `Set ${treatment.currentSetNumber}${treatment.totalSets ? ` of ${treatment.totalSets}` : ''} · ${defaultDuration}d cycles`
     : 'Not configured'
@@ -439,6 +466,12 @@ export default function SettingsPageView() {
             icon="🦷" iconBg="rgba(74,222,128,0.1)"
             title="Treatment Plan" summary={treatmentSummary}
             onClick={() => navigateTo('treatment', 'push')}
+          />
+          <div style={{ height: 1, background: 'var(--border)', margin: '0 18px' }} />
+          <NavRow
+            icon="🎨" iconBg="rgba(168,85,247,0.1)"
+            title="Appearance" summary={appearanceSummary}
+            onClick={() => navigateTo('appearance', 'push')}
           />
           <div style={{ height: 1, background: 'var(--border)', margin: '0 18px' }} />
           <NavRow
@@ -609,6 +642,71 @@ export default function SettingsPageView() {
         {back}
         <h1 style={{ fontSize: 20, fontWeight: 700, color: 'var(--text)', letterSpacing: '-0.01em' }}>Data & Export</h1>
         <ExportButton />
+      </>}
+
+      {/* ── APPEARANCE DETAIL ── */}
+      {activeSection === 'appearance' && <>
+        <button
+          onClick={() => { setPreviewThemeId(savedThemeId); navigateTo(null, 'pop') }}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 6,
+            background: 'none', border: 'none', color: 'var(--cyan)',
+            fontFamily: 'inherit', fontSize: 16, fontWeight: 600,
+            cursor: 'pointer', padding: 'max(env(safe-area-inset-top), 28px) 0 8px',
+            minHeight: 44,
+          }}
+        >
+          <svg width="9" height="15" viewBox="0 0 7 12" fill="none">
+            <path d="M6 1L1 6l5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+          Settings
+        </button>
+        <h1 style={{ fontSize: 20, fontWeight: 700, color: 'var(--text)', letterSpacing: '-0.01em' }}>Appearance</h1>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          {THEMES.map(theme => {
+            const [bg, accent, textColor] = theme.swatchColors
+            const isSelected = previewThemeId === theme.id
+            return (
+              <button
+                key={theme.id}
+                onClick={() => setPreviewThemeId(theme.id)}
+                style={{
+                  background: bg, border: `2px solid ${isSelected ? 'var(--cyan)' : 'var(--border)'}`,
+                  borderRadius: 14, padding: 0, cursor: 'pointer', overflow: 'hidden',
+                  fontFamily: 'inherit', outline: isSelected ? '2px solid var(--cyan)' : 'none',
+                  outlineOffset: 2, position: 'relative',
+                }}
+              >
+                {/* 3-color swatch strip */}
+                <div style={{ display: 'flex', height: 40 }}>
+                  <div style={{ flex: 1, background: bg }} />
+                  <div style={{ flex: 1, background: accent }} />
+                  <div style={{ flex: 1, background: textColor }} />
+                </div>
+                <div style={{ padding: '8px 12px 10px', textAlign: 'left' }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{theme.name}</div>
+                </div>
+                {isSelected && (
+                  <div style={{
+                    position: 'absolute', top: 6, right: 6,
+                    width: 20, height: 20, borderRadius: '50%',
+                    background: 'var(--cyan)', color: '#06090f',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 11, fontWeight: 700,
+                  }}>✓</div>
+                )}
+              </button>
+            )
+          })}
+        </div>
+
+        <SaveButton
+          state={appearanceSaveState}
+          dirty={previewThemeId !== savedThemeId}
+          idleLabel="Save Appearance"
+          onClick={saveAppearance}
+        />
       </>}
 
       </div>

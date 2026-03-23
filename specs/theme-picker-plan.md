@@ -161,12 +161,12 @@ Theme switching is implemented as a CSS custom property override system: the exi
 
 ### Tasks
 
-- [ ] Extend `Section` type and add Appearance nav row — `src/views/SettingsView.tsx` — existing file:
+- [x] Extend `Section` type and add Appearance nav row — `src/views/SettingsView.tsx` — existing file:
   - Add `'appearance'` to the `Section` union type: `type Section = 'wear' | 'treatment' | 'data' | 'appearance'`
   - Add an Appearance `<NavRow>` to the main settings list (between "Treatment Plan" and "Data & Export"), with icon `🎨`, `iconBg="rgba(139,92,246,0.1)"`, title `"Appearance"`, and summary showing the current saved theme name (e.g. `THEMES.find(t => t.id === savedThemeId)?.name ?? 'Obsidian'`).
   - Add the divider between Treatment Plan and the new Appearance row.
 
-- [ ] Add Appearance detail section — `src/views/SettingsView.tsx` — existing file, add the `{activeSection === 'appearance' && ...}` block after the Data detail block:
+- [x] Add Appearance detail section — `src/views/SettingsView.tsx` — existing file, add the `{activeSection === 'appearance' && ...}` block after the Data detail block:
   - Render the back button (same pattern as other sections).
   - Render `<h1>Appearance</h1>`.
   - Import `THEMES` from `src/themes.ts` and `useTheme` from `src/contexts/ThemeContext.tsx`.
