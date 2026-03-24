@@ -52,7 +52,7 @@ coverage/
 lighthouse-*.html
 
 # Claude Code
-.claude/
+# .claude/
 
 # Superpowers brainstorm/visual companion runtime data
 .superpowers/
