@@ -1,3 +1,10 @@
+## [1.19.4](https://github.com/AndreyTodorov/invisatrack/compare/v1.19.3...v1.19.4) (2026-03-26)
+
+
+### Bug Fixes
+
+* add Verify gh auth ([7c01d68](https://github.com/AndreyTodorov/invisatrack/commit/7c01d68bd00e709f3831946fe2244151ec7fcc78))
+
 ## [1.19.3](https://github.com/AndreyTodorov/invisatrack/compare/v1.19.2...v1.19.3) (2026-03-24)
 
 
