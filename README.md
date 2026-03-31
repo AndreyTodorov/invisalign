@@ -120,6 +120,8 @@ VITE_FIREBASE_DATABASE_URL=
 VITE_FIREBASE_PROJECT_ID=
 VITE_FIREBASE_APP_ID=
 VITE_USE_EMULATOR=false          # Set to "true" to use Firebase emulators
+MODEL=                           # AI model identifier for readme-updater feature
+README_UPDATER_MODEL=            # Alternative model configuration for readme-updater
 ```
 
 All variables are injected by Vite at build time via `import.meta.env`. They are also stored as GitHub Actions secrets for the deploy workflow.
@@ -138,13 +140,15 @@ src/
 ├── constants.ts                  # App-wide magic numbers
 ├── navDirection.ts               # Module-level push/pop nav direction state
 ├── test-setup.ts                 # Vitest global setup (mocks localStorage)
+├── themes.ts                     # Theme definitions (Obsidian, Light, Neobrutalism)
 │
 ├── types/
 │   └── index.ts                  # All shared interfaces (Session, AlignerSet, …)
 │
 ├── contexts/
 │   ├── AuthContext.tsx            # Google sign-in, current user state
-│   └── DataContext.tsx            # Firebase real-time sync → React state
+│   ├── DataContext.tsx            # Firebase real-time sync → React state
+│   └── ThemeContext.tsx           # Theme state management and CSS custom property injection
 │
 ├── hooks/
 │   ├── useTimer.ts               # Timer state, reminder, auto-cap logic
@@ -153,7 +157,8 @@ src/
 │   ├── useReports.ts             # Statistics, streak, per-set analytics
 │   ├── useAuth.ts                # Thin wrapper around AuthContext
 │   ├── useAutoAdvanceSet.ts      # Auto-advance to next set when endDate passes
-│   └── useSwipeTab.ts            # Touch swipe gesture → tab navigation
+│   ├── useSwipeTab.ts            # Touch swipe gesture → tab navigation
+│   └── useTheme.ts               # Access current theme and theme switcher
 │
 ├── services/
 │   ├── firebase.ts               # Firebase init, all ref helpers, CRUD helpers
@@ -190,12 +195,13 @@ src/
 │   ├── reports/
 │   │   ├── WearChart.tsx         # Recharts bar chart (wear % by day)
 │   │   ├── StatsGrid.tsx         # Summary stats (avg wear, removals, …)
-│   │   └── SetReportCard.tsx     # Per-set statistics card
+│   │   ├── SetReportCard.tsx     # Per-set statistics card
+│   │   └── NavRow.tsx            # Period navigation bar (Prev/Next/Today buttons)
 │   └── settings/
 │       └── ExportButton.tsx      # CSV export trigger
 │
 └── views/
-    ├── HomeView.tsx              # Dashboard: timer, today's summary, session list
+    ├── HomeView.tsx              # Dashboard: timer, sync/offline pill, today's summary, session list, treatment progress
     ├── HistoryView.tsx           # Session + set history with filters and month grouping
     ├── ReportsView.tsx           # Analytics dashboard (tabs: 7d / week / month / by set)
     ├── SettingsView.tsx          # Nav-list settings with push/pop sub-screens
@@ -235,7 +241,8 @@ AuthContext  ──(uid)──▶  DataContext
 HashRouter (main.tsx)
   └── AuthProvider (App.tsx)
         └── DataProvider (App.tsx, mounted after sign-in)
-              └── Routes / Views
+              └── ThemeProvider (App.tsx)
+                    └── Routes / Views
 ```
 
 ---
@@ -286,6 +293,7 @@ interface UserProfile {
   dailyWearGoalMinutes: number       // Default 1320 (22 h)
   reminderThresholdMinutes: number   // Default 30
   autoCapMinutes: number             // Default 120
+  theme?: string                     // Theme ID (optional; defaults to "obsidian")
   createdAt: string
 }
 
@@ -339,9 +347,37 @@ Sessions that span local midnight are split by `splitSessionByDay()` so stats cr
 
 `useAutoAdvanceSet` runs on mount (once per `currentSetNumber`). If the current set's `endDate` has passed it automatically creates the next set(s) and advances `treatment.currentSetNumber` forward, chaining through any consecutive expired sets in one pass. Pre-existing sets in the chain are recognised and skipped (only `treatment` is updated for those).
 
+### Theming system
+
+InvisaTrack supports three themes: **Obsidian** (dark, default), **Light**, and **Neobrutalism**. Themes are defined in `src/themes.ts` and applied via CSS custom properties injected by `ThemeContext`.
+
+**Theme structure** (`src/themes.ts`):
+```typescript
+interface Theme {
+  id: string
+  name: string
+  colors: Record<string, string>  // CSS custom properties
+  radii: Record<string, string>   // --radius-card, --radius-btn, --radius-badge
+  borderWidth: string             // --border-width
+  cardShadow: string              // --card-shadow
+}
+```
+
+**Switching themes:** Settings → Appearance shows theme cards with live preview. Changes are saved to `UserProfile.theme` in Firebase and persisted across sessions.
+
+**FOUC prevention:** A synchronous script in `index.html` reads the theme from `localStorage` before the first render and injects CSS custom properties immediately.
+
+**Custom properties managed by theme:**
+- All color variables (`--bg`, `--surface`, `--text`, `--cyan`, `--green`, `--amber`, `--rose`, etc.)
+- Border radii (`--radius-card`, `--radius-btn`, `--radius-badge`)
+- Border width (`--border-width`)
+- Card shadow (`--card-shadow`)
+
 ### Settings navigation
 
-`SettingsView` renders a nav-list home screen with a `ProfileCard` (avatar, name, email, sign-out) and three `NavRow` entries: **Wear Goal**, **Treatment Plan**, and **Data & Export**. Tapping a row pushes a detail sub-screen using CSS `settings-push` / `settings-pop` animations (controlled by `navDir` state and a `navKey` counter). Swiping right from the left edge pops back to the list, mirroring iOS navigation conventions.
+`SettingsView` renders a nav-list home screen with a `ProfileCard` (avatar, name, email, sign-out) and four `NavRow` entries: **Wear Goal**, **Treatment Plan**, **Appearance**, and **Data & Export**. Tapping a row pushes a detail sub-screen using CSS `settings-push` / `settings-pop` animations (controlled by `navDir` state and a `navKey` counter). Swiping right from the left edge pops back to the list, mirroring iOS navigation conventions.
+
+The **Appearance** sub-screen shows all available themes as cards with live preview, a Save button (enabled only after changes), and a Revert button to discard unsaved changes.
 
 The **Treatment Plan** sub-screen includes a **Duration override** field for the current aligner set, allowing its end date to be adjusted independently of the default cycle length.
 
@@ -357,8 +393,10 @@ App version (`__APP_VERSION__`) and build date (`__BUILD_DATE__`) are injected a
 
 ### Reports enhancements
 
+- **Period navigation**: Week and Month tabs include a `NavRow` component with Prev/Next/Today buttons for navigating through time periods. The navigation state is shared between the tabs and the `CalendarHeatmap`.
 - **Best/Worst callout**: Two cards beneath the stats grid highlight the best and worst completed days in the selected period.
-- **Calendar heatmap**: The Month tab shows a `CalendarHeatmap` with month-by-month navigation. Each cell is coloured green (compliant), amber (≥ 85 % of goal), rose (below), or grey (no data).
+- **Calendar heatmap**: The Month tab shows a `CalendarHeatmap` with month-by-month navigation synced to the tab's period offset. Each cell is coloured green (compliant), amber (≥ 85 % of goal), rose (below), or grey (no data). Day-of-month labels are displayed on each cell with contrast-aware text colors.
+- **Dynamic chart titles**: `WearChart` receives a `periodLabel` prop for context-specific titles (e.g., "Last 7 days", "This week", "January 2025").
 - **Tab persistence**: The selected Reports tab is saved to `localStorage` and restored on next visit.
 - **Swipe navigation**: Tabs in both ReportsView and HistoryView respond to horizontal swipe gestures via `useSwipeTab`.
 
@@ -381,6 +419,7 @@ App version (`__APP_VERSION__`) and build date (`__BUILD_DATE__`) are injected a
 | `useAuth()` | `{ user, loading, signIn, signOut }` | Thin wrapper around AuthContext |
 | `useAutoAdvanceSet()` | `{ autoAdvancedSets, dismiss }` | Auto-advances expired sets on mount |
 | `useSwipeTab(onSwipe)` | `{ onTouchStart, onTouchEnd }` | Returns touch handlers; calls `onSwipe('left'\|'right')` on horizontal swipe |
+| `useTheme()` | `{ theme, setTheme, isLoading }` | Access and update current theme; reads from `UserProfile` and persists changes to Firebase |
 
 ---
 
@@ -422,9 +461,10 @@ App version (`__APP_VERSION__`) and build date (`__BUILD_DATE__`) are injected a
 
 | Component | Props | Notes |
 |---|---|---|
-| `WearChart` | `data: DailyStats[], goalMinutes` | DD.MM date labels; cyan = compliant, rose = not |
+| `WearChart` | `data: DailyStats[], goalMinutes, periodLabel?` | DD.MM date labels; cyan = compliant, rose = not; title set via `periodLabel` prop |
 | `StatsGrid` | `stats: DailyStats[]` | Avg wear time, avg removals (rounded integer), compliance days |
 | `SetReportCard` | `setNumber, current, previous?` | Shows delta vs previous set |
+| `NavRow` | `period, onPrev, onNext, onToday, isPrevDisabled, isNextDisabled` | Shared navigation bar for Week/Month tabs with Prev/Next/Today buttons |
 
 ---
 
@@ -437,7 +477,7 @@ App version (`__APP_VERSION__`) and build date (`__BUILD_DATE__`) are injected a
 | `/` | HomeView | Dashboard: timer, sync/offline pill, today's summary, session list, treatment progress |
 | `/history` | HistoryView | Two tabs (Sessions / Sets); sessions grouped by month with filter chips and collapsible headers |
 | `/reports` | ReportsView | Tabs: 7 days / this week / this month / by set; swipe-to-change tabs; tab persisted to localStorage |
-| `/settings` | SettingsView | Nav-list home screen → push into Wear Goal / Treatment Plan / Data & Export sub-screens |
+| `/settings` | SettingsView | Nav-list home screen → push into Wear Goal / Treatment Plan / Appearance / Data & Export sub-screens |
 | `/onboarding` | OnboardingView | First-run: set number, total sets, daily goal |
 | (unauthenticated) | LoginView | Google sign-in |
 
@@ -539,7 +579,8 @@ src/views/HomeView.test.tsx
 1. Checkout, Node 22, `npm ci`
 2. Inject Firebase secrets from GitHub repository secrets
 3. `npm run build` → `dist/`
-4. Deploy `dist/` to GitHub Pages
+4. `check-release` job verifies semantic-release output; skips deployment if no new release was made
+5. Deploy `dist/` to GitHub Pages
 
 **GitHub secrets required**:
 - `VITE_FIREBASE_API_KEY`
@@ -571,11 +612,13 @@ src/views/HomeView.test.tsx
 
 ## Design System
 
-All colours, spacing, and typography are controlled via CSS custom properties defined in `src/index.css`. The app is dark-only.
+All colours, spacing, and typography are controlled via CSS custom properties defined in `src/index.css`. The app supports three themes: Obsidian (dark, default), Light, and Neobrutalism.
 
 **Typography**: `Outfit` (headings, body) + `JetBrains Mono` (timers, numeric stats) — both from Google Fonts.
 
 ### Core CSS variables
+
+Managed by the active theme (`src/themes.ts`):
 
 ```css
 --bg            /* Page background */
@@ -594,6 +637,12 @@ All colours, spacing, and typography are controlled via CSS custom properties de
 --rose          /* Error / over budget */
 --amber-bg      /* Amber tinted background */
 --rose-bg       /* Rose tinted background */
+
+--radius-card   /* Card border radius */
+--radius-btn    /* Button border radius */
+--radius-badge  /* Badge border radius */
+--border-width  /* Border thickness */
+--card-shadow   /* Card box shadow */
 ```
 
 ### Keyframe animations
@@ -606,6 +655,4 @@ All colours, spacing, and typography are controlled via CSS custom properties de
 | `animate-slide-up` | Bottom sheet modals slide up |
 | `settings-push` | Settings sub-screen slides in from the right (push navigation) |
 | `settings-pop` | Settings sub-screen slides in from the left (back navigation) |
-| `tab-enter-right` | Tab content slides in from the right (advancing tabs) |
-| `tab-enter-left` | Tab content slides in from the left (going back in tabs) |
 | `sync-dot-pulse` | Amber dot pulses in the sync status indicator |
