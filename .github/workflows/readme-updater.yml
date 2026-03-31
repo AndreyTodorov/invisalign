@@ -1,12 +1,6 @@
 name: Update README
 
 on:
-  push:
-    branches: [main]
-    paths-ignore:
-      - "README.md"
-      - ".github/**"
-
   schedule:
     - cron: "0 8 * * 1" # every Monday 08:00 UTC
 
