@@ -1,3 +1,10 @@
+## [1.19.5](https://github.com/AndreyTodorov/invisatrack/compare/v1.19.4...v1.19.5) (2026-03-31)
+
+
+### Bug Fixes
+
+* utcnow() replaced with datetime.now(datetime.UTC) ([ad7b7dd](https://github.com/AndreyTodorov/invisatrack/commit/ad7b7ddee12158615bdff064b855e31911f3ce39))
+
 ## [1.19.4](https://github.com/AndreyTodorov/invisatrack/compare/v1.19.3...v1.19.4) (2026-03-26)
 
 
