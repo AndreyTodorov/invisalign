@@ -124,7 +124,7 @@ VITE_USE_EMULATOR=false          # Set to "true" to use Firebase emulators
 
 All variables are injected by Vite at build time via `import.meta.env`. They are also stored as GitHub Actions secrets for the deploy workflow.
 
-<!-- TODO: verify if MODEL and README_UPDATER_MODEL are user-facing config or internal tooling only -->
+> **Note**: `MODEL` and `README_UPDATER_MODEL` appear in source scans but may be tooling-only (internal AI/automation config). <!-- TODO: verify if these are user-facing -->
 
 ---
 
@@ -606,6 +606,10 @@ src/themes.test.ts
 - `VITE_FIREBASE_DATABASE_URL`
 - `VITE_FIREBASE_PROJECT_ID`
 - `VITE_FIREBASE_APP_ID`
+
+### README automation
+
+A Claude skill (`.claude/skills/readme-updater.md`) automates README updates based on git history and codebase scans. The skill analyzes commits since the last README update, discovers project structure, and generates accurate documentation updates.
 
 ---
 
